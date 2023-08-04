@@ -1,6 +1,7 @@
 package de.tub.dima.mascara.modifier;
 
 import com.google.common.collect.ImmutableList;
+import de.tub.dima.mascara.dataMasking.MaskingFunctionsCatalog;
 import de.tub.dima.mascara.policies.AccessControlPolicy;
 import de.tub.dima.mascara.policies.AttributeMapping;
 import javolution.testing.AssertionException;
@@ -8,6 +9,8 @@ import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelVisitor;
 import org.apache.calcite.rel.core.*;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexLiteral;
@@ -23,13 +26,15 @@ import java.util.*;
 
 public class CompliantPlanner extends RelVisitor {
     public RelBuilder builder;
-    public HashMap<RelNode, List<AccessControlPolicy>> nodesToPolicies;
     public Map<RelOptTable, AccessControlPolicy> policies;
     public List<AttributeMapping> attributeMappings;
+    public FrameworkConfig frameworkConfig;
+    public boolean needsModification = true;
+
 
     public CompliantPlanner(FrameworkConfig frameworkConfig, Map<RelOptTable, AccessControlPolicy> policies) {
+        this.frameworkConfig = frameworkConfig;
         this.builder = RelBuilder.create(frameworkConfig);
-        this.nodesToPolicies = new HashMap<>();
         this.attributeMappings = null;
         this.policies = policies;
     }
@@ -40,70 +45,142 @@ public class CompliantPlanner extends RelVisitor {
             TableScan scan = (TableScan) node;
             RelOptTable table = scan.getTable();
             AccessControlPolicy policy = policies.get(table);
-            builder.scan(policy.name);
-            nodesToPolicies.put(node, List.of(policy));
-            if (nodesToPolicies.get(parent) == null){
-                nodesToPolicies.put(parent, List.of(policy));
+            if (policy == null){
+//                builder.scan(node.getTable().getQualifiedName());
+                builder.push(scan);
+                this.needsModification = false;
+                createAttributesMapping(scan);
             } else {
-                nodesToPolicies.get(parent).add(policy);
+                builder.scan(policy.name);
+                attributeMappings = policy.attributeMappings;
             }
-            attributeMappings = policy.attributeMappings;
         } else if (node instanceof Filter) {
             Filter filter = (Filter) node;
             super.visit(node, ordinal, parent);
-
-            RexNode condition = filter.getCondition();
-            RexNode compliantCondition = getCompliantCondition((RexCall) condition);
-            builder.filter(compliantCondition);
-
-            if (nodesToPolicies.get(parent) == null){
-                nodesToPolicies.put(parent, nodesToPolicies.get(node));
+            if (this.needsModification){
+                RexNode condition = filter.getCondition();
+                RexNode compliantCondition = getCompliantCondition((RexCall) condition);
+                builder.filter(compliantCondition);
             } else {
-                nodesToPolicies.get(parent).addAll(nodesToPolicies.get(node));
+                builder.push(filter);
             }
         } else if (node instanceof Project) {
             Project project = (Project) node;
             super.visit(node, ordinal, parent);
-
-            List<Pair<RexNode, String>> namedProjects = project.getNamedProjects();
-            Pair<List<RexNode>, List<String>> compliantProjects = getCompliantProjects(namedProjects);
-            builder.project(compliantProjects.left, compliantProjects.right);
-
-            if (parent != null){
-                if (nodesToPolicies.get(parent) == null){
-                    nodesToPolicies.put(parent, nodesToPolicies.get(node));
-                } else {
-                    nodesToPolicies.get(parent).addAll(nodesToPolicies.get(node));
-                }
+            if (this.needsModification){
+                List<Pair<RexNode, String>> namedProjects = project.getNamedProjects();
+                Pair<List<RexNode>, List<String>> compliantProjects = getCompliantProjects(namedProjects);
+                builder.project(compliantProjects.left, compliantProjects.right);
+            } else {
+                builder.push(project);
+                updateAttributesMapping(project);
             }
         } else if (node instanceof Aggregate) {
             Aggregate aggregate = (Aggregate) node;
             super.visit(node, ordinal, parent);
-            Pair<List<RexInputRef>, List<RelBuilder.AggCall>> compliantAggregate =
-                    getCompliantAggregate(aggregate);
-            List<RexInputRef> compliantGroupSet = compliantAggregate.left;
-            List<RelBuilder.AggCall> compliantAggCalls = compliantAggregate.right;
+            if (this.needsModification){
+                Pair<List<RexInputRef>, List<RelBuilder.AggCall>> compliantAggregate =
+                        getCompliantAggregate(aggregate);
+                List<RexInputRef> compliantGroupSet = compliantAggregate.left;
+                List<RelBuilder.AggCall> compliantAggCalls = compliantAggregate.right;
 
-            if (!compliantAggCalls.isEmpty()){
-                RelBuilder.GroupKey groupKey = builder.groupKey(compliantGroupSet);
-                builder.aggregate(groupKey, compliantAggCalls);
+                if (!compliantAggCalls.isEmpty()){
+                    RelBuilder.GroupKey groupKey = builder.groupKey(compliantGroupSet);
+                    builder.aggregate(groupKey, compliantAggCalls);
+                } else {
+                    // No aggregate is available. We have to transform the operator to a Projection
+                    builder.project(compliantGroupSet);
+                }
             } else {
-                // No aggregate is available. We have to transform the operator to a Projection
-                builder.project(compliantGroupSet);
+                builder.push(aggregate);
+                updateAttributesMapping(aggregate);
             }
         } else if (node instanceof Sort) {
             Sort sort = (Sort) node;
             super.visit(node, ordinal, parent);
-            List<RexNode> compliantSorts = getCompliantSorts(sort);
-            if (!compliantSorts.isEmpty()){
-                builder.sort(compliantSorts);
+            if (this.needsModification){
+                List<RexNode> compliantSorts = getCompliantSorts(sort);
+                if (!compliantSorts.isEmpty()){
+                    builder.sort(compliantSorts);
+                }
+            } else {
+                builder.push(sort);
             }
         } else if (node instanceof Join) {
             Join join = (Join) node;
-            super.visit(node, ordinal, parent);
-            // TODO add join
+            CompliantPlanner leftPlanner = new CompliantPlanner(this.frameworkConfig, this.policies);
+            leftPlanner.go(join.getLeft());
+            CompliantPlanner rightPlanner = new CompliantPlanner(this.frameworkConfig, this.policies);
+            rightPlanner.go(join.getRight());
 
+            RelNode leftPlan = leftPlanner.builder.build();
+            RelNode rightPlan = rightPlanner.builder.build();
+            builder.push(leftPlan);
+            builder.push(rightPlan);
+            builder.join(join.getJoinType(), join.getCondition());
+
+            needsModification = leftPlanner.needsModification || rightPlanner.needsModification;
+            combineAttributeMappings(leftPlanner, rightPlanner);
         }
+    }
+
+    private void combineAttributeMappings(CompliantPlanner leftPlanner, CompliantPlanner rightPlanner){
+        this.attributeMappings = new ArrayList<>();
+        int max = -1;
+        for (AttributeMapping attr : leftPlanner.attributeMappings) {
+            if (attr.newRef.getIndex() > max){
+                max = attr.newRef.getIndex();
+            }
+            this.attributeMappings.add(attr);
+        }
+        max++;
+        for (AttributeMapping attr : rightPlanner.attributeMappings) {
+            this.attributeMappings.add(attr.increaseIdx(max));
+        }
+    }
+
+    private void createAttributesMapping(TableScan scan) {
+        this.attributeMappings = new ArrayList<>();
+        List<RelDataTypeField> fieldList = scan.deriveRowType().getFieldList();
+        List<String> fieldNames = scan.deriveRowType().getFieldNames();
+        for (int i = 0; i < fieldList.size(); i++) {
+            RexInputRef inputRef = new RexInputRef(i, fieldList.get(i).getType());
+            attributeMappings.add(new AttributeMapping(inputRef, fieldNames.get(i)));
+        }
+    }
+
+    private void updateAttributesMapping(Project project){
+        List<AttributeMapping> newAttributeMappings = new ArrayList<>();
+        List<Pair<RexNode, String>> namedProjects = project.getNamedProjects();
+        for (int i = 0; i < namedProjects.size(); i++) {
+            Pair<RexNode, String> namedProject = namedProjects.get(i);
+            if (namedProject.left instanceof RexInputRef) {
+                RexInputRef inputRef = new RexInputRef(i, namedProject.left.getType());
+                newAttributeMappings.add(new AttributeMapping(inputRef,namedProject.right));
+            } else {
+                throw new RuntimeException("Queries with generalized projection are not supported yet.");
+            }
+        }
+        this.attributeMappings = newAttributeMappings;
+    }
+
+    private void updateAttributesMapping(Aggregate aggregate){
+        List<AttributeMapping> newAttributeMappings = new ArrayList<>();
+        int i = 0;
+        List<Integer> groupSet = aggregate.getGroupSet().asList();
+
+        for (int index : groupSet) {
+            AttributeMapping compliantAttribute = getCompliantAttribute(index);
+            newAttributeMappings.add(compliantAttribute.project(i, i));
+            i++;
+        }
+        List<AggregateCall> aggCalls = aggregate.getAggCallList();
+        for (AggregateCall agg : aggCalls) {
+            RexInputRef inputRef = new RexInputRef(i, agg.getType());
+            newAttributeMappings.add(new AttributeMapping(inputRef, agg.getName()));
+            i++;
+        }
+        this.attributeMappings = newAttributeMappings;
     }
 
     private List<RexNode> getCompliantSorts(Sort sort){
@@ -212,9 +289,21 @@ public class CompliantPlanner extends RelVisitor {
             // For now make the assumption of simple conditions with literals
             assert condition.operands.size() == 2;
 
+            // Join predicate.
+            if (condition.operands.get(0) instanceof RexInputRef && condition.operands.get(1) instanceof RexInputRef){
+                RexInputRef leftInputRef = (RexInputRef) condition.operands.get(0);
+                RexInputRef rightInputRef = (RexInputRef) condition.operands.get(1);
+                AttributeMapping leftCompliantAttribute = getCompliantAttribute(leftInputRef);
+                AttributeMapping rightCompliantAttribute = getCompliantAttribute(rightInputRef);
+                if (leftCompliantAttribute == null || rightCompliantAttribute == null){
+                    return null;
+                } else {
+                    return builder.call(condition.getOperator(), leftCompliantAttribute.newRef, rightCompliantAttribute.newRef);
+                }
+            }
+
             RexLiteral literal;
             RexInputRef inputRef;
-
             boolean literalIsLeft = false;
 
             if (condition.operands.get(0) instanceof RexInputRef && condition.operands.get(1) instanceof RexLiteral){

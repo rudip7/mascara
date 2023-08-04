@@ -36,6 +36,9 @@ public class AttributeMapping {
         this(originalRef, newRef, name,false, null, null);
     }
 
+    public AttributeMapping(RexInputRef inputRef, String name) {
+        this(inputRef, inputRef, name,false, null, null);
+    }
     public boolean isMasked() {
         return masked;
     }
@@ -70,7 +73,11 @@ public class AttributeMapping {
         RexInputRef newRef = new RexInputRef(newIdx, this.getType());
         return new AttributeMapping(originalRef, newRef, name, this.masked, this.maskedAttribute, this.maskingFunction);
     }
-
+    public AttributeMapping increaseIdx(int idxIncrease){
+        RexInputRef originalRef = new RexInputRef(this.originalRef.getIndex() + idxIncrease, this.originalRef.getType());
+        RexInputRef newRef = new RexInputRef(this.newRef.getIndex() + idxIncrease, this.getType());
+        return new AttributeMapping(originalRef, newRef, name, this.masked, this.maskedAttribute, this.maskingFunction);
+    }
     public boolean isAggregable(){
         return !this.isMasked() || this.maskingFunction.aggregable;
     }
