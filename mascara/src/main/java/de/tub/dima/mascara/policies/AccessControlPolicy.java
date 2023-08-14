@@ -2,6 +2,8 @@ package de.tub.dima.mascara.policies;
 
 import de.tub.dima.mascara.dataMasking.MaskingFunction;
 import de.tub.dima.mascara.dataMasking.MaskingFunctionsCatalog;
+import de.tub.dima.mascara.optimizer.statistics.TableStatistics;
+import de.tub.dima.mascara.optimizer.statistics.StatisticsManager;
 import de.tub.dima.mascara.parser.Parser;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelNode;
@@ -9,12 +11,12 @@ import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.rel.core.Filter;
 import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.TableScan;
+import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.util.Pair;
 
-import java.util.ArrayList;
 import java.util.List;
 
 
@@ -22,12 +24,17 @@ public class AccessControlPolicy {
 
     public RelRoot logicalPlan;
     public RelOptTable protectedTable;
-    public List<String> name;
-    public List<AttributeMapping> attributeMappings;
+    public List<String> policyName;
+    public List<String> protectedTableName;
+    public AttributeMappings attributeMappings;
+    public TableStatistics protectedStats;
+    public TableStatistics originalStats;
 
-    public AccessControlPolicy(String policySql, List<String> name, Parser parser, MaskingFunctionsCatalog maskingFunctionsCatalog) throws Exception {
-        this.attributeMappings = new ArrayList<>();
-        this.name = name;
+
+
+    public AccessControlPolicy(String policySql, List<String> policyName, Parser parser, MaskingFunctionsCatalog maskingFunctionsCatalog) throws Exception {
+        this.attributeMappings = new AttributeMappings();
+        this.policyName = policyName;
         this.logicalPlan = parser.getLogicalPlan(policySql);
 
         RelNode rel = this.logicalPlan.rel;
@@ -58,6 +65,7 @@ public class AccessControlPolicy {
         }
 
         this.protectedTable = scan.getTable();
+        this.protectedTableName = scan.getTable().getQualifiedName();
         parser.reset();
     }
 
@@ -96,5 +104,32 @@ public class AccessControlPolicy {
         return baseTable.equals(this.protectedTable);
     }
 
+    public List<String> getPolicyName() {
+        return policyName;
+    }
 
+    public void setStatistics(StatisticsManager statsManager){
+        this.protectedStats = statsManager.getStatistics(policyName);
+        this.originalStats = statsManager.getStatistics(protectedTableName);
+    }
+
+    public void indexOriginalStats(){
+        List<RelDataTypeField> fieldList = this.protectedTable.getRowType().getFieldList();
+        for (int i = 0; i < fieldList.size(); i++) {
+            RelDataTypeField field = fieldList.get(i);
+            this.originalStats.indexAttribute(field.getIndex(), field.getName());
+        }
+    }
+
+    public void indexProtectedStats(){
+        for (int i = 0; i < this.attributeMappings.size(); i++) {
+            AttributeMapping mapping = this.attributeMappings.get(i);
+            this.protectedStats.indexAttribute(mapping.newRef.getIndex(), mapping.getName());
+        }
+    }
+
+    public void indexStats(){
+        indexOriginalStats();
+        indexProtectedStats();
+    }
 }

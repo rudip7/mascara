@@ -1,16 +1,14 @@
 package de.tub.dima.mascara.modifier;
 
-import com.google.common.collect.ImmutableList;
-import de.tub.dima.mascara.dataMasking.MaskingFunctionsCatalog;
+import de.tub.dima.mascara.optimizer.iqMetadata.IQMetadata;
 import de.tub.dima.mascara.policies.AccessControlPolicy;
 import de.tub.dima.mascara.policies.AttributeMapping;
+import de.tub.dima.mascara.policies.AttributeMappings;
 import javolution.testing.AssertionException;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelVisitor;
 import org.apache.calcite.rel.core.*;
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexLiteral;
@@ -18,7 +16,6 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.tools.FrameworkConfig;
 import org.apache.calcite.tools.RelBuilder;
-import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.calcite.util.Pair;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -27,9 +24,10 @@ import java.util.*;
 public class CompliantPlanner extends RelVisitor {
     public RelBuilder builder;
     public Map<RelOptTable, AccessControlPolicy> policies;
-    public List<AttributeMapping> attributeMappings;
+    public AttributeMappings attributeMappings;
     public FrameworkConfig frameworkConfig;
     public boolean needsModification = true;
+    public IQMetadata iqMetadata;
 
 
     public CompliantPlanner(FrameworkConfig frameworkConfig, Map<RelOptTable, AccessControlPolicy> policies) {
@@ -37,6 +35,7 @@ public class CompliantPlanner extends RelVisitor {
         this.builder = RelBuilder.create(frameworkConfig);
         this.attributeMappings = null;
         this.policies = policies;
+        this.iqMetadata = new IQMetadata();
     }
 
     @Override
@@ -49,9 +48,10 @@ public class CompliantPlanner extends RelVisitor {
 //                builder.scan(node.getTable().getQualifiedName());
                 builder.push(scan);
                 this.needsModification = false;
-                createAttributesMapping(scan);
+                this.attributeMappings = new AttributeMappings(scan);
+                this.iqMetadata.getProjectedAttributes(this.attributeMappings, table.getQualifiedName(), policy.getPolicyName());
             } else {
-                builder.scan(policy.name);
+                builder.scan(policy.policyName);
                 attributeMappings = policy.attributeMappings;
             }
         } else if (node instanceof Filter) {
@@ -73,7 +73,7 @@ public class CompliantPlanner extends RelVisitor {
                 builder.project(compliantProjects.left, compliantProjects.right);
             } else {
                 builder.push(project);
-                updateAttributesMapping(project);
+                this.attributeMappings.update(project);
             }
         } else if (node instanceof Aggregate) {
             Aggregate aggregate = (Aggregate) node;
@@ -93,7 +93,7 @@ public class CompliantPlanner extends RelVisitor {
                 }
             } else {
                 builder.push(aggregate);
-                updateAttributesMapping(aggregate);
+                this.attributeMappings.update(aggregate);
             }
         } else if (node instanceof Sort) {
             Sort sort = (Sort) node;
@@ -120,74 +120,15 @@ public class CompliantPlanner extends RelVisitor {
             builder.join(join.getJoinType(), join.getCondition());
 
             needsModification = leftPlanner.needsModification || rightPlanner.needsModification;
-            combineAttributeMappings(leftPlanner, rightPlanner);
+            this.attributeMappings = leftPlanner.attributeMappings.combineAttributeMappings(rightPlanner.attributeMappings);
         }
-    }
-
-    private void combineAttributeMappings(CompliantPlanner leftPlanner, CompliantPlanner rightPlanner){
-        this.attributeMappings = new ArrayList<>();
-        int max = -1;
-        for (AttributeMapping attr : leftPlanner.attributeMappings) {
-            if (attr.newRef.getIndex() > max){
-                max = attr.newRef.getIndex();
-            }
-            this.attributeMappings.add(attr);
-        }
-        max++;
-        for (AttributeMapping attr : rightPlanner.attributeMappings) {
-            this.attributeMappings.add(attr.increaseIdx(max));
-        }
-    }
-
-    private void createAttributesMapping(TableScan scan) {
-        this.attributeMappings = new ArrayList<>();
-        List<RelDataTypeField> fieldList = scan.deriveRowType().getFieldList();
-        List<String> fieldNames = scan.deriveRowType().getFieldNames();
-        for (int i = 0; i < fieldList.size(); i++) {
-            RexInputRef inputRef = new RexInputRef(i, fieldList.get(i).getType());
-            attributeMappings.add(new AttributeMapping(inputRef, fieldNames.get(i)));
-        }
-    }
-
-    private void updateAttributesMapping(Project project){
-        List<AttributeMapping> newAttributeMappings = new ArrayList<>();
-        List<Pair<RexNode, String>> namedProjects = project.getNamedProjects();
-        for (int i = 0; i < namedProjects.size(); i++) {
-            Pair<RexNode, String> namedProject = namedProjects.get(i);
-            if (namedProject.left instanceof RexInputRef) {
-                RexInputRef inputRef = new RexInputRef(i, namedProject.left.getType());
-                newAttributeMappings.add(new AttributeMapping(inputRef,namedProject.right));
-            } else {
-                throw new RuntimeException("Queries with generalized projection are not supported yet.");
-            }
-        }
-        this.attributeMappings = newAttributeMappings;
-    }
-
-    private void updateAttributesMapping(Aggregate aggregate){
-        List<AttributeMapping> newAttributeMappings = new ArrayList<>();
-        int i = 0;
-        List<Integer> groupSet = aggregate.getGroupSet().asList();
-
-        for (int index : groupSet) {
-            AttributeMapping compliantAttribute = getCompliantAttribute(index);
-            newAttributeMappings.add(compliantAttribute.project(i, i));
-            i++;
-        }
-        List<AggregateCall> aggCalls = aggregate.getAggCallList();
-        for (AggregateCall agg : aggCalls) {
-            RexInputRef inputRef = new RexInputRef(i, agg.getType());
-            newAttributeMappings.add(new AttributeMapping(inputRef, agg.getName()));
-            i++;
-        }
-        this.attributeMappings = newAttributeMappings;
     }
 
     private List<RexNode> getCompliantSorts(Sort sort){
         List<RexNode> compliantSorts = new ArrayList<>();
         for (RexNode sortExp : sort.getSortExps()) {
             if (sortExp instanceof RexInputRef){
-                AttributeMapping compliantAttribute = getCompliantAttribute((RexInputRef) sortExp);
+                AttributeMapping compliantAttribute = this.attributeMappings.getCompliantAttribute((RexInputRef) sortExp);
                 if (compliantAttribute != null){
                     compliantSorts.add(compliantAttribute.newRef);
                 }
@@ -197,13 +138,13 @@ public class CompliantPlanner extends RelVisitor {
     }
 
     private Pair<List<RexInputRef>, List<RelBuilder.AggCall>> getCompliantAggregate(Aggregate aggregate){
-        List<AttributeMapping> newAttributeMappings = new ArrayList<>();
+        AttributeMappings newAttributeMappings = new AttributeMappings();
         int i = 0;
         int j = 0;
         List<Integer> groupSet = aggregate.getGroupSet().asList();
         List<RexInputRef> compliantGroupSet = new ArrayList<>();
         for (int index : groupSet) {
-            AttributeMapping compliantAttribute = getCompliantAttribute(index);
+            AttributeMapping compliantAttribute = this.attributeMappings.getCompliantAttribute(index);
             if (compliantAttribute != null){
                 compliantGroupSet.add(compliantAttribute.newRef);
                 newAttributeMappings.add(compliantAttribute.project(i, j));
@@ -217,7 +158,7 @@ public class CompliantPlanner extends RelVisitor {
         for (AggregateCall agg : aggCalls) {
             List<RexNode> operands = new ArrayList<>();
             for (Integer attr : agg.getArgList()) {
-                AttributeMapping compliantAttribute = getCompliantAttribute(attr);
+                AttributeMapping compliantAttribute = this.attributeMappings.getCompliantAttribute(attr);
                 if (compliantAttribute != null && compliantAttribute.isAggregable()){
                     operands.add(compliantAttribute.newRef);
                 } else {
@@ -243,7 +184,7 @@ public class CompliantPlanner extends RelVisitor {
     private Pair<List<RexNode>, List<String>> getCompliantProjects(List<Pair<RexNode, String>> namedProjects){
         List<String> names = new ArrayList<>();
         List<RexNode> compliantProjects = new ArrayList<>();
-        List<AttributeMapping> newAttributeMappings = new ArrayList<>();
+        AttributeMappings newAttributeMappings = new AttributeMappings();
         int j = 0;
         for (int i = 0; i < namedProjects.size(); i++) {
             Pair<RexNode, String> pair = namedProjects.get(i);
@@ -251,7 +192,7 @@ public class CompliantPlanner extends RelVisitor {
             if (pair.left instanceof RexInputRef) {
                 RexInputRef project = (RexInputRef) pair.left;
                 String name = pair.right;
-                AttributeMapping compliantAttribute = getCompliantAttribute(project);
+                AttributeMapping compliantAttribute = this.attributeMappings.getCompliantAttribute(project);
                 if (compliantAttribute != null) {
                     compliantProjects.add(compliantAttribute.newRef);
                     names.add(name);
@@ -293,10 +234,12 @@ public class CompliantPlanner extends RelVisitor {
             if (condition.operands.get(0) instanceof RexInputRef && condition.operands.get(1) instanceof RexInputRef){
                 RexInputRef leftInputRef = (RexInputRef) condition.operands.get(0);
                 RexInputRef rightInputRef = (RexInputRef) condition.operands.get(1);
-                AttributeMapping leftCompliantAttribute = getCompliantAttribute(leftInputRef);
-                AttributeMapping rightCompliantAttribute = getCompliantAttribute(rightInputRef);
+                AttributeMapping leftCompliantAttribute = this.attributeMappings.getCompliantAttribute(leftInputRef);
+                AttributeMapping rightCompliantAttribute = this.attributeMappings.getCompliantAttribute(rightInputRef);
                 if (leftCompliantAttribute == null || rightCompliantAttribute == null){
                     return null;
+                } else if (leftCompliantAttribute.isMasked() || rightCompliantAttribute.isMasked()) {
+                    throw new RuntimeException("Join predicate on masked attribute: Case not covered yet.");
                 } else {
                     return builder.call(condition.getOperator(), leftCompliantAttribute.newRef, rightCompliantAttribute.newRef);
                 }
@@ -317,7 +260,7 @@ public class CompliantPlanner extends RelVisitor {
                 throw new AssertionException("Case not implemented yet");
             }
 
-            AttributeMapping compliantAttribute = getCompliantAttribute(inputRef);
+            AttributeMapping compliantAttribute = this.attributeMappings.getCompliantAttribute(inputRef);
 
             if (compliantAttribute == null){
                 // Attribute is suppressed
@@ -343,34 +286,6 @@ public class CompliantPlanner extends RelVisitor {
         }
         return null;
     }
-
-    public AttributeMapping getCompliantAttribute(RexInputRef required){
-        for (AttributeMapping mapping:
-                this.attributeMappings) {
-            if (mapping.originalRef.equals(required)) {
-                return mapping;
-            }
-        }
-        return null;
-    }
-
-    public AttributeMapping getCompliantAttribute(int requiredIndex){
-        for (AttributeMapping mapping:
-                this.attributeMappings) {
-            if (mapping.originalRef.getIndex() == requiredIndex) {
-                return mapping;
-            }
-        }
-        return null;
-    }
-
 }
 
-
-
-//    private void connectToParent(RelNode originalChild, RelNode newChild, RelNode parent){
-//        Project p = (Project) parent;
-//        parent.set
-//
-//    }
 

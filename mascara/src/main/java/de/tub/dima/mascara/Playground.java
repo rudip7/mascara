@@ -26,6 +26,7 @@ public class Playground {
         connectionProperties.put("url", "jdbc:postgresql://localhost:5432/mascaradb");
         connectionProperties.put("driverClassName", "org.postgresql.Driver");
         connectionProperties.put("username", "postgres");
+        connectionProperties.put("user", "postgres");
         connectionProperties.put("password", "1902");
         connectionProperties.put("schema", "public");
 

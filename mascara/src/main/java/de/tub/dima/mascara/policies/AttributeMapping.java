@@ -1,6 +1,7 @@
 package de.tub.dima.mascara.policies;
 
 import de.tub.dima.mascara.dataMasking.MaskingFunction;
+import de.tub.dima.mascara.optimizer.iqMetadata.AttributeMetadata;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexInputRef;
@@ -15,10 +16,24 @@ public class AttributeMapping {
     public RexInputRef originalRef;
     public RexInputRef newRef;
     public String name;
+    public AttributeMetadata originalAttribute;
+    public AttributeMetadata compliantAttribute;
     public boolean masked;
     public RexCall maskedAttribute;
-
     public MaskingFunction maskingFunction;
+    public RexCall aggregate = null;
+
+    public AttributeMapping(RexInputRef originalRef, RexInputRef newRef, String name, boolean masked, RexCall maskedAttribute, MaskingFunction maskingFunction) {
+        if (masked && maskedAttribute == null){
+            throw new IllegalArgumentException("If the attribute is masked, then provide also the maskedAttribute RexCall.");
+        }
+        this.originalRef = originalRef;
+        this.newRef = newRef;
+        this.name = name;
+        this.masked = masked;
+        this.maskedAttribute = maskedAttribute;
+        this.maskingFunction = maskingFunction;
+    }
 
     public AttributeMapping(RexInputRef originalRef, RexInputRef newRef, String name, boolean masked, RexCall maskedAttribute, MaskingFunction maskingFunction) {
         if (masked && maskedAttribute == null){
@@ -64,6 +79,10 @@ public class AttributeMapping {
         return originalRef.getType();
     }
 
+    public String getName() {
+        return name;
+    }
+
     public AttributeMapping project(int originalIdx, int newIdx){
         return project(originalIdx, newIdx, this.name);
     }
@@ -80,5 +99,9 @@ public class AttributeMapping {
     }
     public boolean isAggregable(){
         return !this.isMasked() || this.maskingFunction.aggregable;
+    }
+
+    public void setAggregate(RexCall aggregate) {
+        this.aggregate = aggregate;
     }
 }

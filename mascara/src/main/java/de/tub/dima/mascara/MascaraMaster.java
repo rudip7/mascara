@@ -2,13 +2,12 @@ package de.tub.dima.mascara;
 
 import de.tub.dima.mascara.dataMasking.MaskingFunctionsCatalog;
 import de.tub.dima.mascara.modifier.QueryModifier;
+import de.tub.dima.mascara.optimizer.statistics.StatisticsManager;
 import de.tub.dima.mascara.parser.Parser;
 import de.tub.dima.mascara.policies.PoliciesCatalog;
 import de.tub.dima.mascara.utils.DebuggingTools;
 import org.apache.calcite.rel.RelRoot;
 
-import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
@@ -19,12 +18,15 @@ public class MascaraMaster {
     public PoliciesCatalog policiesCatalog;
     public MaskingFunctionsCatalog maskingFunctionsCatalog;
     public QueryModifier queryModifier;
+    public StatisticsManager statsManager;
 
     public MascaraMaster(Properties connectionProperties) throws Exception {
         this.maskingFunctionsCatalog = new MaskingFunctionsCatalog();
         this.dbConnector = new DbConnector(connectionProperties, this.maskingFunctionsCatalog);
-        this.parser = new Parser(this.dbConnector.connection);
-        this.policiesCatalog = new PoliciesCatalog(this.parser, this.maskingFunctionsCatalog);
+        this.parser = new Parser(this.dbConnector.calciteConnection);
+        this.statsManager = StatisticsManager.getInstance();
+        this.statsManager.setConnector(dbConnector);
+        this.policiesCatalog = new PoliciesCatalog(this.parser, this.maskingFunctionsCatalog, this.statsManager);
         this.queryModifier = new QueryModifier(this.parser, this.policiesCatalog);
     }
 
@@ -37,6 +39,10 @@ public class MascaraMaster {
         return "Hala Madrid!";
     }
 
+    public void collectStatistics(){
+//        dbConnector.
+    }
+
     public RelRoot getLogicalPlan(String sql) throws Exception {
         RelRoot logicalPlan = this.parser.getLogicalPlan(sql);
         this.parser.reset();
@@ -47,5 +53,13 @@ public class MascaraMaster {
         List<CompliantPlan> compliantPlans = this.queryModifier.getCompliantPlans(logicalPlan);
         // TODO
         return compliantPlans;
+    }
+
+    public Parser getParser() {
+        return parser;
+    }
+
+    public MaskingFunctionsCatalog getMaskingFunctionsCatalog() {
+        return maskingFunctionsCatalog;
     }
 }

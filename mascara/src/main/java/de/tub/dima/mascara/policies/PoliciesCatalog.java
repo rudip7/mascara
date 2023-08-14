@@ -1,6 +1,7 @@
 package de.tub.dima.mascara.policies;
 
 import de.tub.dima.mascara.dataMasking.MaskingFunctionsCatalog;
+import de.tub.dima.mascara.optimizer.statistics.StatisticsManager;
 import de.tub.dima.mascara.parser.Parser;
 
 import java.util.ArrayList;
@@ -14,7 +15,7 @@ public class PoliciesCatalog {
     public List<AccessControlPolicy> policies;
     public MaskingFunctionsCatalog maskingFunctionsCatalog;
 
-    public PoliciesCatalog(Parser parser, MaskingFunctionsCatalog maskingFunctionsCatalog) throws Exception {
+    public PoliciesCatalog(Parser parser, MaskingFunctionsCatalog maskingFunctionsCatalog, StatisticsManager statsManager) throws Exception {
         this.policies = new ArrayList<>();
         this.maskingFunctionsCatalog = maskingFunctionsCatalog;
         // Hard-coded for now
@@ -24,7 +25,9 @@ public class PoliciesCatalog {
             String path = policyPaths.get(i);
             List<String> name = policyNames.get(i);
             String policyString = readFile(path);
-            this.policies.add(new AccessControlPolicy(policyString, name, parser, maskingFunctionsCatalog));
+            AccessControlPolicy policy = new AccessControlPolicy(policyString, name, parser, maskingFunctionsCatalog);
+            policy.setStatistics(statsManager);
+            policy.indexStats();
         }
     }
 }
