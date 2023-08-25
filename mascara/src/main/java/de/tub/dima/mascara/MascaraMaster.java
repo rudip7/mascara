@@ -26,7 +26,7 @@ public class MascaraMaster {
         this.parser = new Parser(this.dbConnector.calciteConnection);
         this.statsManager = StatisticsManager.getInstance();
         this.statsManager.setConnector(dbConnector);
-        this.policiesCatalog = new PoliciesCatalog(this.parser, this.maskingFunctionsCatalog, this.statsManager);
+        this.policiesCatalog = new PoliciesCatalog(this.parser, this.maskingFunctionsCatalog);
         this.queryModifier = new QueryModifier(this.parser, this.policiesCatalog);
     }
 

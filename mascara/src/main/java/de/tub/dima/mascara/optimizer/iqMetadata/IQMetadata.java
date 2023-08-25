@@ -22,14 +22,14 @@ public class IQMetadata {
         this.aggregates = null;
         this.selectivity = -1;
         this.totalNRows = -1;
-        this.markedAttributes = null;
+//        this.markedAttributes = null;
     }
 
     public void getProjectedAttributes(AttributeMappings mappings, List<String> tableName, List<String> policyName){
         for (int i = 0; i < mappings.size(); i++) {
             AttributeMapping mapping = mappings.get(i);
             if (mapping.isMasked()) {
-                projectedAttributes.add(new AttributeMetadata(tableName, mapping.originalRef.getIndex(), policyName, mapping.newRef.getIndex()));
+//                projectedAttributes.add(new AttributeMetadata(tableName, mapping.originalRef.getIndex(), policyName, mapping.newRef.getIndex()));
             } else {
                 projectedAttributes.add(new AttributeMetadata(tableName, mapping.originalRef.getIndex()));
             }
@@ -37,8 +37,8 @@ public class IQMetadata {
     }
 
     public void keepAttribute(int compliantIndex){
-        if (markedAttributes == null){
-            markedAttributes = new ArrayList<>();
-        }
+//        if (markedAttributes == null){
+//            markedAttributes = new ArrayList<>();
+//        }
     }
 }

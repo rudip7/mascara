@@ -1,11 +1,13 @@
 package de.tub.dima.mascara.dataMasking.maskingFunctions;
 
 import de.tub.dima.mascara.dataMasking.MaskingFunction;
+import de.tub.dima.mascara.dataMasking.inverseFunctions.InverseBlurPhone;
 
 public class BlurPhone extends MaskingFunction {
 
     public BlurPhone() {
         this.name = "BLUR_PHONE";
+        this.inverseMaskingFunction = new InverseBlurPhone();
     }
 
     public static String eval(String phoneStr, int nFields) {

@@ -1,69 +1,103 @@
 package de.tub.dima.mascara.optimizer.iqMetadata;
 
+import de.tub.dima.mascara.dataMasking.MaskingFunction;
 import de.tub.dima.mascara.optimizer.statistics.AttributeStatistics;
 import de.tub.dima.mascara.optimizer.statistics.StatisticsManager;
 
 import java.util.List;
 
 public class AttributeMetadata {
-    public List<String> originalTableName;
-    public String originalAttname;
-    public AttributeStatistics originalStats;
-    public int originalIndex;
-    public List<String> compliantTableName;
-    public String compliantAttname;
-    public int compliantIndex;
-    public AttributeStatistics compliantStats;
+    public List<String> tableName;
+    public String attname;
+    public int index;
+    public AttributeStatistics stats = null;
+    public boolean groupingAttribute = false;
+    public boolean aggregate = false;
+    public MaskingFunction maskingFunction = null;
 
-    public AttributeMetadata(List<String> originalTableName, int originalIndex, List<String> compliantTableName, int compliantIndex) {
-        StatisticsManager statsManager = StatisticsManager.getInstance();
-        this.originalTableName = originalTableName;
-        this.originalIndex = originalIndex;
-        this.originalStats = statsManager.getAttributeStatistics(originalTableName, originalIndex);
-        this.originalAttname = originalStats.getAttname();
-
-        this.compliantTableName = compliantTableName;
-        this.compliantIndex = compliantIndex;
-        this.compliantStats = statsManager.getAttributeStatistics(originalTableName, compliantIndex);
-        this.compliantAttname = compliantStats.getAttname();
+    public AttributeMetadata(List<String> tableName, int index, String attname) {
+        this.tableName = tableName;
+        this.index = index;
+        this.attname = attname;
+        this.maskingFunction = null;
+        triggerEstimateHistFreq();
     }
 
-    public AttributeMetadata(List<String> originalTableName, String originalAttname, List<String> compliantTableName, String compliantAttname) {
-        StatisticsManager statsManager = StatisticsManager.getInstance();
-        this.originalTableName = originalTableName;
-        this.originalIndex = -1;
-        this.originalStats = statsManager.getAttributeStatistics(originalTableName, originalAttname);
-        this.originalAttname = originalAttname;
-
-        this.compliantTableName = compliantTableName;
-        this.compliantIndex = -1;
-        this.compliantStats = statsManager.getAttributeStatistics(originalTableName, compliantAttname);
-        this.compliantAttname = compliantAttname;
+    public AttributeMetadata(List<String> tableName, int index) {
+        this.tableName = tableName;
+        this.index = index;
+        this.attname = null;
+        this.maskingFunction = null;
+        triggerEstimateHistFreq();
     }
 
-    public AttributeMetadata(List<String> originalTableName, int originalIndex) {
-        StatisticsManager statsManager = StatisticsManager.getInstance();
-        this.originalTableName = originalTableName;
-        this.originalIndex = originalIndex;
-        this.originalStats = statsManager.getAttributeStatistics(originalTableName, originalIndex);
-        this.originalAttname = originalStats.getAttname();
-
-        this.compliantTableName = null;
-        this.compliantIndex = -1;
-        this.compliantStats = null;
-        this.compliantAttname = null;
+    public AttributeMetadata(List<String> tableName, int index, String attname, MaskingFunction maskingFunction) {
+        this.tableName = tableName;
+        this.index = index;
+        this.attname = attname;
+        this.maskingFunction = maskingFunction;
+        triggerEstimateHistFreq();
     }
 
-    public AttributeMetadata(List<String> originalTableName, String originalAttname) {
-        StatisticsManager statsManager = StatisticsManager.getInstance();
-        this.originalTableName = originalTableName;
-        this.originalIndex = -1;
-        this.originalStats = statsManager.getAttributeStatistics(originalTableName, originalAttname);
-        this.originalAttname = originalAttname;
+    public AttributeMetadata(List<String> tableName, int index, MaskingFunction maskingFunction) {
+        this.tableName = tableName;
+        this.index = index;
+        this.attname = null;
+        this.maskingFunction = maskingFunction;
+        triggerEstimateHistFreq();
+    }
 
-        this.compliantTableName = null;
-        this.compliantIndex = -1;
-        this.compliantStats = null;
-        this.compliantAttname = null;
+
+    public MaskingFunction getMaskingFunction() {
+        return maskingFunction;
+    }
+
+    public void setMaskingFunction(MaskingFunction maskingFunction) {
+        this.maskingFunction = maskingFunction;
+    }
+
+    public void triggerEstimateHistFreq(){
+        if(getStats() != null){
+            if (this.maskingFunction != null && this.maskingFunction.getInverseMaskingFunction() != null){
+                stats.unmaskStatistics(this.maskingFunction.getInverseMaskingFunction());
+            } else {
+                stats.estimateHistFreq(false);
+            }
+        }
+    }
+
+    public List<String> getTableName() {
+        return tableName;
+    }
+
+    public String getAttname() {
+        if (attname == null && getStats() != null){
+            this.attname = stats.getAttname();
+        }
+        return attname;
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
+    public AttributeStatistics getStats() {
+        if (stats == null){
+            StatisticsManager statsManager = StatisticsManager.getInstance();
+            this.stats = this.index >= 0 ? statsManager.getAttributeStatistics(tableName, index) : statsManager.getAttributeStatistics(tableName, attname);
+        }
+        return stats;
+    }
+
+    public boolean isGroupingAttribute() {
+        return groupingAttribute;
+    }
+
+    public boolean isAggregate() {
+        return aggregate;
+    }
+
+    public void setGrouping() {
+        this.groupingAttribute = true;
     }
 }

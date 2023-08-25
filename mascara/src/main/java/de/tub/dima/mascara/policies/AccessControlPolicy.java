@@ -2,6 +2,7 @@ package de.tub.dima.mascara.policies;
 
 import de.tub.dima.mascara.dataMasking.MaskingFunction;
 import de.tub.dima.mascara.dataMasking.MaskingFunctionsCatalog;
+import de.tub.dima.mascara.optimizer.iqMetadata.AttributeMetadata;
 import de.tub.dima.mascara.optimizer.statistics.TableStatistics;
 import de.tub.dima.mascara.optimizer.statistics.StatisticsManager;
 import de.tub.dima.mascara.parser.Parser;
@@ -41,7 +42,6 @@ public class AccessControlPolicy {
         Project project;
         if (rel instanceof Project) {
             project = (Project) rel;
-            createAttributesMapping(project, maskingFunctionsCatalog);
             rel = project.getInput();
         } else {
             project = null;
@@ -66,6 +66,9 @@ public class AccessControlPolicy {
 
         this.protectedTable = scan.getTable();
         this.protectedTableName = scan.getTable().getQualifiedName();
+        setStatistics();
+        createAttributesMapping(project, maskingFunctionsCatalog);
+        indexStats();
         parser.reset();
     }
 
@@ -77,8 +80,10 @@ public class AccessControlPolicy {
             // RexInputRef -> unmasked attributes
             // RexCall -> masked attributes
             if (attr instanceof RexInputRef){
-                RexInputRef newRef = new RexInputRef(i, attr.getType());
-                this.attributeMappings.add(new AttributeMapping((RexInputRef) attr, newRef, namedAttr.right));
+                RexInputRef inputRef = (RexInputRef) attr;
+                RexInputRef newRef = new RexInputRef(i, inputRef.getType());
+                AttributeMetadata attributeMetadata = new AttributeMetadata(this.protectedTableName, inputRef.getIndex());
+                this.attributeMappings.add(new AttributeMapping(attributeMetadata, inputRef, newRef, namedAttr.right));
             } else if (attr instanceof RexCall){
                 RexCall maskedAttribute = (RexCall) attr;
                 RexInputRef originalRef = null;
@@ -94,8 +99,10 @@ public class AccessControlPolicy {
                     throw new IllegalArgumentException("A masking function should be apply on an attribute.");
                 }
                 RexInputRef newRef = new RexInputRef(i, attr.getType());
-                MaskingFunction maskingFunction = maskingFunctionsCatalog.getByName(maskedAttribute.getOperator().getName());
-                this.attributeMappings.add(new AttributeMapping(originalRef, newRef, namedAttr.right, true, maskedAttribute, maskingFunction));
+                MaskingFunction maskingFunction = maskingFunctionsCatalog.getMaskingFunctionByName(maskedAttribute.getOperator().getName());
+                AttributeMetadata originalAttribute = new AttributeMetadata(this.protectedTableName, originalRef.getIndex());
+                AttributeMetadata compliantAttribute = new AttributeMetadata(this.policyName, newRef.getIndex(), maskingFunction);
+                this.attributeMappings.add(new AttributeMapping(originalAttribute, originalRef, compliantAttribute, newRef, namedAttr.right, true, maskedAttribute, maskingFunction));
             }
         }
     }
@@ -108,7 +115,8 @@ public class AccessControlPolicy {
         return policyName;
     }
 
-    public void setStatistics(StatisticsManager statsManager){
+    public void setStatistics(){
+        StatisticsManager statsManager = StatisticsManager.getInstance();
         this.protectedStats = statsManager.getStatistics(policyName);
         this.originalStats = statsManager.getStatistics(protectedTableName);
     }

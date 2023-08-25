@@ -9,7 +9,10 @@ import java.util.Map;
 
 public class StatisticsManager {
     public Map<List<String>, TableStatistics> statisticsCatalog;
+    public Map<List<String>, Long> tableSizes;
     public DbConnector connector;
+
+
 
     private static StatisticsManager instance;
 
@@ -19,6 +22,7 @@ public class StatisticsManager {
 
     private StatisticsManager() {
         this.statisticsCatalog = new HashMap<>();
+        this.tableSizes = new HashMap<>();
     }
 
     public static StatisticsManager getInstance() {
@@ -35,7 +39,8 @@ public class StatisticsManager {
             return tableStatistics;
         } else {
             try {
-                TableStatistics statistics = connector.getStatistics(tableName);
+                Long tableSize = getTableSize(tableName);
+                TableStatistics statistics = connector.getStatistics(tableName, tableSize);
                 statisticsCatalog.put(tableName, statistics);
                 return statistics;
             } catch (SQLException e) {
@@ -43,6 +48,23 @@ public class StatisticsManager {
             }
         }
     }
+
+    public Long getTableSize(List<String> tableName) {
+        Long size = tableSizes.get(tableName);
+        if (size != null){
+            return size;
+        } else {
+            try {
+                size = connector.getTableSize(tableName);
+                tableSizes.put(tableName, size);
+                return size;
+            } catch (SQLException e) {
+                return -1L;
+            }
+        }
+    }
+
+
 
     public TableStatistics getTableStatistics(List<String> tableName){
         return statisticsCatalog.get(tableName);

@@ -49,22 +49,39 @@ public class DbConnector {
         this.jdbcConnection = DriverManager.getConnection(connectionProperties.getProperty("url"), connectionProperties);
     }
 
-    public TableStatistics getStatistics(List<String> tableName) throws SQLException {
-        TableStatistics tableStatistics = new TableStatistics(tableName);
+    public TableStatistics getStatistics(List<String> tableName, long size) throws SQLException {
+        TableStatistics tableStatistics = new TableStatistics(tableName, size);
         String query = "SELECT attname, n_distinct, most_common_vals::text::text[] as most_common_vals, most_common_freqs, histogram_bounds::text::text[] as histogram_bounds FROM pg_stats WHERE tablename='"+tableName.get(1)+"'";
         try (Statement stmt = jdbcConnection.createStatement()) {
             ResultSet rs = stmt.executeQuery(query);
             while (rs.next()) {
                 String attname = rs.getString("attname");
                 float n_distinct = rs.getFloat("n_distinct");
-                String[] most_common_vals = (String[]) rs.getArray("most_common_vals").getArray();
-                float[] most_common_freqs = (float[]) rs.getArray("most_common_freqs").getArray();
-                String[] histogram_bounds = (String[]) rs.getArray("histogram_bounds").getArray();
+                Array mostCommonVals = rs.getArray("most_common_vals");
+                String[] most_common_vals = mostCommonVals == null ? null : (String[]) mostCommonVals.getArray();
+                Array mostCommonFreqs = rs.getArray("most_common_freqs");
+                Float[] most_common_freqs = mostCommonFreqs == null ? null : (Float[]) mostCommonFreqs.getArray();
+                Array histogramBounds = rs.getArray("histogram_bounds");
+                String[] histogram_bounds = histogramBounds == null ? null : (String[]) histogramBounds.getArray();
                 tableStatistics.addAttributeStatistics(attname, n_distinct, most_common_vals, most_common_freqs, histogram_bounds);
             }
         } catch (SQLException e) {
             throw e;
         }
         return tableStatistics;
+    }
+
+    public Long getTableSize(List<String> tableName) throws SQLException {
+        Long size = -1L;
+        String query = "SELECT count(*) FROM "+tableName.get(0)+".\""+tableName.get(1)+"\"";
+        try (Statement stmt = jdbcConnection.createStatement()) {
+            ResultSet rs = stmt.executeQuery(query);
+            while (rs.next()) {
+                size = rs.getLong(1);
+            }
+        } catch (SQLException e) {
+            throw e;
+        }
+        return size;
     }
 }

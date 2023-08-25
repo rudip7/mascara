@@ -20,4 +20,5 @@ public class AddRelativeNoise extends MaskingFunction {
 
         return (int) Math.round(randomValue);
     }
+
 }

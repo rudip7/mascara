@@ -25,17 +25,15 @@ public class CompliantPlanner extends RelVisitor {
     public RelBuilder builder;
     public Map<RelOptTable, AccessControlPolicy> policies;
     public AttributeMappings attributeMappings;
+    public AttributeMappings queryAttributes;
     public FrameworkConfig frameworkConfig;
     public boolean needsModification = true;
-    public IQMetadata iqMetadata;
-
 
     public CompliantPlanner(FrameworkConfig frameworkConfig, Map<RelOptTable, AccessControlPolicy> policies) {
         this.frameworkConfig = frameworkConfig;
         this.builder = RelBuilder.create(frameworkConfig);
         this.attributeMappings = null;
         this.policies = policies;
-        this.iqMetadata = new IQMetadata();
     }
 
     @Override
@@ -48,8 +46,9 @@ public class CompliantPlanner extends RelVisitor {
 //                builder.scan(node.getTable().getQualifiedName());
                 builder.push(scan);
                 this.needsModification = false;
-                this.attributeMappings = new AttributeMappings(scan);
-                this.iqMetadata.getProjectedAttributes(this.attributeMappings, table.getQualifiedName(), policy.getPolicyName());
+                this.queryAttributes = new AttributeMappings(scan);
+                this.attributeMappings = this.queryAttributes.clone();
+//                this.iqMetadata.getProjectedAttributes(this.attributeMappings, table.getQualifiedName(), policy.getPolicyName());
             } else {
                 builder.scan(policy.policyName);
                 attributeMappings = policy.attributeMappings;
@@ -67,17 +66,19 @@ public class CompliantPlanner extends RelVisitor {
         } else if (node instanceof Project) {
             Project project = (Project) node;
             super.visit(node, ordinal, parent);
+            this.queryAttributes.update(project);
             if (this.needsModification){
                 List<Pair<RexNode, String>> namedProjects = project.getNamedProjects();
                 Pair<List<RexNode>, List<String>> compliantProjects = getCompliantProjects(namedProjects);
                 builder.project(compliantProjects.left, compliantProjects.right);
             } else {
                 builder.push(project);
-                this.attributeMappings.update(project);
+                this.attributeMappings = this.queryAttributes.clone();
             }
         } else if (node instanceof Aggregate) {
             Aggregate aggregate = (Aggregate) node;
             super.visit(node, ordinal, parent);
+            this.queryAttributes.update(aggregate);
             if (this.needsModification){
                 Pair<List<RexInputRef>, List<RelBuilder.AggCall>> compliantAggregate =
                         getCompliantAggregate(aggregate);
@@ -93,7 +94,7 @@ public class CompliantPlanner extends RelVisitor {
                 }
             } else {
                 builder.push(aggregate);
-                this.attributeMappings.update(aggregate);
+                this.attributeMappings = this.queryAttributes.clone();
             }
         } else if (node instanceof Sort) {
             Sort sort = (Sort) node;
@@ -120,6 +121,7 @@ public class CompliantPlanner extends RelVisitor {
             builder.join(join.getJoinType(), join.getCondition());
 
             needsModification = leftPlanner.needsModification || rightPlanner.needsModification;
+            this.queryAttributes = leftPlanner.queryAttributes.combineAttributeMappings(rightPlanner.queryAttributes);
             this.attributeMappings = leftPlanner.attributeMappings.combineAttributeMappings(rightPlanner.attributeMappings);
         }
     }
@@ -157,8 +159,9 @@ public class CompliantPlanner extends RelVisitor {
         List<RelBuilder.AggCall> compliantAggCalls = new ArrayList<>();
         for (AggregateCall agg : aggCalls) {
             List<RexNode> operands = new ArrayList<>();
+            AttributeMapping compliantAttribute;
             for (Integer attr : agg.getArgList()) {
-                AttributeMapping compliantAttribute = this.attributeMappings.getCompliantAttribute(attr);
+                compliantAttribute = this.attributeMappings.getCompliantAttribute(attr);
                 if (compliantAttribute != null && compliantAttribute.isAggregable()){
                     operands.add(compliantAttribute.newRef);
                 } else {
@@ -172,7 +175,8 @@ public class CompliantPlanner extends RelVisitor {
 
                 RexInputRef originalRef = new RexInputRef(i, agg.getType());
                 RexInputRef newRef = new RexInputRef(j, agg.getType());
-                newAttributeMappings.add(new AttributeMapping(originalRef, newRef, agg.getName()));
+                AttributeMapping mapping = new AttributeMapping(originalRef, newRef, agg.getName());
+                newAttributeMappings.add(mapping);
                 j++;
             }
             i++;

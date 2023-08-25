@@ -5,8 +5,14 @@ import de.tub.dima.mascara.dataMasking.InverseMaskingFunction;
 import java.util.ArrayList;
 import java.util.List;
 
-public class InverseBlurPhone implements InverseMaskingFunction {
-    public static List<String> eval(String blurredPhone) {
+public class InverseBlurPhone extends InverseMaskingFunction {
+
+    public InverseBlurPhone() {
+        this.name = "INVERSE_BLUR_PHONE";
+    }
+
+    @Override
+    public List<String> eval(String blurredPhone) {
         if (blurredPhone.matches("\\d+")) {
             return List.of(blurredPhone);
         }

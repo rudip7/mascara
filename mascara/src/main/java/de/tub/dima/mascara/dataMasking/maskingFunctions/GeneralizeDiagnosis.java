@@ -1,10 +1,12 @@
 package de.tub.dima.mascara.dataMasking.maskingFunctions;
 
 import de.tub.dima.mascara.dataMasking.MaskingFunction;
+import de.tub.dima.mascara.dataMasking.inverseFunctions.InverseGeneralizeDiagnosis;
 
 public class GeneralizeDiagnosis extends MaskingFunction {
     public GeneralizeDiagnosis() {
         this.name = "GENERALIZE_DIAGNOSIS";
+        this.inverseMaskingFunction = new InverseGeneralizeDiagnosis();
     }
 
     public static String eval(String diagnosis, int level) throws Exception {

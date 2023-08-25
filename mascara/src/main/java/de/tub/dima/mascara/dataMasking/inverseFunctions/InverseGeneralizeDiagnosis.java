@@ -1,11 +1,20 @@
 package de.tub.dima.mascara.dataMasking.inverseFunctions;
 
 import de.tub.dima.mascara.dataMasking.InverseMaskingFunction;
+import de.tub.dima.mascara.dataMasking.alphabets.AlphabetCatalog;
+import de.tub.dima.mascara.dataMasking.alphabets.DiagnosisAlphabet;
+
 import java.util.ArrayList;
 import java.util.List;
 
-public class InverseGeneralizeDiagnosis implements InverseMaskingFunction {
-    public static List<String> eval(String generalizedDiagnosis) {
+public class InverseGeneralizeDiagnosis extends InverseMaskingFunction {
+    public InverseGeneralizeDiagnosis() {
+        this.name = "INVERSE_GENERALIZE_DIAGNOSIS";
+        this.alphabet = AlphabetCatalog.getInstance().getAlphabet("diagnosisAlphabet");
+    }
+
+    @Override
+    public List<String> eval(String generalizedDiagnosis) {
         char head = generalizedDiagnosis.charAt(0);
         String possibleHeads = "ABCDEFGHIJKLMNOPQRSTVXYZ";
         assert possibleHeads.indexOf(head) != -1 && generalizedDiagnosis.length() == 5 :

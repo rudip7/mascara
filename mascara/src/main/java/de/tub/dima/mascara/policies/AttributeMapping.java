@@ -2,6 +2,7 @@ package de.tub.dima.mascara.policies;
 
 import de.tub.dima.mascara.dataMasking.MaskingFunction;
 import de.tub.dima.mascara.optimizer.iqMetadata.AttributeMetadata;
+import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexInputRef;
@@ -13,46 +14,53 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AttributeMapping {
+    public AttributeMetadata originalAttribute;
+    public AttributeMetadata compliantAttribute;
     public RexInputRef originalRef;
     public RexInputRef newRef;
     public String name;
-    public AttributeMetadata originalAttribute;
-    public AttributeMetadata compliantAttribute;
     public boolean masked;
-    public RexCall maskedAttribute;
+    public RexCall maskedRexCall;
     public MaskingFunction maskingFunction;
-    public RexCall aggregate = null;
+    public boolean aggregate = false;
 
-    public AttributeMapping(RexInputRef originalRef, RexInputRef newRef, String name, boolean masked, RexCall maskedAttribute, MaskingFunction maskingFunction) {
-        if (masked && maskedAttribute == null){
-            throw new IllegalArgumentException("If the attribute is masked, then provide also the maskedAttribute RexCall.");
+    public AttributeMapping(AttributeMetadata originalAttribute, RexInputRef originalRef, AttributeMetadata compliantAttribute, RexInputRef newRef, String name, boolean masked, RexCall maskedRexCall, MaskingFunction maskingFunction) {
+        if (masked && (maskedRexCall == null || compliantAttribute == null)){
+            throw new IllegalArgumentException("If the attribute is masked, then provide also the compliantAttribute AttributeMetadata and the masking RexCall.");
         }
+        this.originalAttribute = originalAttribute;
+        this.compliantAttribute = compliantAttribute;
         this.originalRef = originalRef;
         this.newRef = newRef;
         this.name = name;
         this.masked = masked;
-        this.maskedAttribute = maskedAttribute;
+        this.maskedRexCall = maskedRexCall;
         this.maskingFunction = maskingFunction;
+
     }
 
-    public AttributeMapping(RexInputRef originalRef, RexInputRef newRef, String name, boolean masked, RexCall maskedAttribute, MaskingFunction maskingFunction) {
-        if (masked && maskedAttribute == null){
-            throw new IllegalArgumentException("If the attribute is masked, then provide also the maskedAttribute RexCall.");
-        }
-        this.originalRef = originalRef;
-        this.newRef = newRef;
-        this.name = name;
-        this.masked = masked;
-        this.maskedAttribute = maskedAttribute;
-        this.maskingFunction = maskingFunction;
+    public AttributeMapping(AttributeMetadata originalAttribute, RexInputRef originalRef, RexInputRef newRef, String name) {
+        this(originalAttribute, originalRef, null, newRef, name,false, null, null);
+    }
+
+    public AttributeMapping(AttributeMetadata originalAttribute, RexInputRef inputRef, String name) {
+        this(originalAttribute, inputRef, inputRef, name);
     }
 
     public AttributeMapping(RexInputRef originalRef, RexInputRef newRef, String name) {
-        this(originalRef, newRef, name,false, null, null);
+        this(null, originalRef, null, newRef, name, false, null, null);
+        this.aggregate = true;
     }
 
+    /**
+     * Creates an attribute mapping for an aggregate over an unmasked attribute.
+     *
+     * @param inputRef
+     * @param name
+     */
     public AttributeMapping(RexInputRef inputRef, String name) {
-        this(inputRef, inputRef, name,false, null, null);
+        this(null, inputRef, null, inputRef, name, false, null, null);
+        this.aggregate = true;
     }
     public boolean isMasked() {
         return masked;
@@ -62,19 +70,19 @@ public class AttributeMapping {
             return null;
         }
         List<RexNode> operands = new ArrayList<>();
-        for (RexNode operand : maskedAttribute.operands) {
+        for (RexNode operand : maskedRexCall.operands) {
             if (operand instanceof RexInputRef){
                 operands.add(literal);
             } else {
                 operands.add(operand);
             }
         }
-        return (RexCall) builder.call(maskedAttribute.op, operands);
+        return (RexCall) builder.call(maskedRexCall.op, operands);
     }
 
     public RelDataType getType(){
         if (masked){
-            return maskedAttribute.getType();
+            return maskedRexCall.getType();
         }
         return originalRef.getType();
     }
@@ -90,18 +98,44 @@ public class AttributeMapping {
     public AttributeMapping project(int originalIdx, int newIdx, String name){
         RexInputRef originalRef = new RexInputRef(originalIdx, this.originalRef.getType());
         RexInputRef newRef = new RexInputRef(newIdx, this.getType());
-        return new AttributeMapping(originalRef, newRef, name, this.masked, this.maskedAttribute, this.maskingFunction);
+        return new AttributeMapping(this.originalAttribute, originalRef, this.compliantAttribute, newRef, name, this.masked, this.maskedRexCall, this.maskingFunction);
     }
     public AttributeMapping increaseIdx(int idxIncrease){
         RexInputRef originalRef = new RexInputRef(this.originalRef.getIndex() + idxIncrease, this.originalRef.getType());
         RexInputRef newRef = new RexInputRef(this.newRef.getIndex() + idxIncrease, this.getType());
-        return new AttributeMapping(originalRef, newRef, name, this.masked, this.maskedAttribute, this.maskingFunction);
+        return new AttributeMapping(this.originalAttribute, originalRef, this.compliantAttribute, newRef, this.name, this.masked, this.maskedRexCall, this.maskingFunction);
     }
     public boolean isAggregable(){
         return !this.isMasked() || this.maskingFunction.aggregable;
     }
 
-    public void setAggregate(RexCall aggregate) {
-        this.aggregate = aggregate;
+    public void setAggregate() {
+        this.aggregate = true;
+    }
+
+    public void setGrouping() {
+        if (originalAttribute != null){
+            originalAttribute.setGrouping();
+        }
+        if (compliantAttribute != null){
+            compliantAttribute.setGrouping();
+        }
+    }
+
+    @Override
+    public AttributeMapping clone() {
+        AttributeMapping clonedMapping = new AttributeMapping(
+                this.originalAttribute,
+                new RexInputRef(this.originalRef.getIndex(), this.originalRef.getType()),
+                this.compliantAttribute,
+                new RexInputRef(this.newRef.getIndex(), this.newRef.getType()),
+                this.name,
+                this.masked,
+                this.maskedRexCall,
+                this.maskingFunction
+        );
+        clonedMapping.aggregate = this.aggregate;
+
+        return clonedMapping;
     }
 }

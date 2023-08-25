@@ -1,15 +1,23 @@
 package de.tub.dima.mascara.dataMasking.inverseFunctions;
 
 import de.tub.dima.mascara.dataMasking.InverseMaskingFunction;
+import de.tub.dima.mascara.dataMasking.alphabets.AlphabetCatalog;
+import de.tub.dima.mascara.dataMasking.alphabets.IntegerAlphabet;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class InverseBucketizeAge implements InverseMaskingFunction {
-    public static List<Integer> eval(String bucketizedAge) {
-        List<Integer> values = new ArrayList<>();
+public class InverseBucketizeAge extends InverseMaskingFunction {
+    public InverseBucketizeAge() {
+        this.name = "INVERSE_BUCKETIZE_AGE";
+        this.alphabet = AlphabetCatalog.getInstance().getAlphabet("integerAlphabet");
+    }
+
+    @Override
+    public List<String> eval(String bucketizedAge) {
+        List<String> values = new ArrayList<>();
         Pattern pattern = Pattern.compile("\\d+\\.\\d+|\\d+");
         Matcher matcher = pattern.matcher(bucketizedAge);
 
@@ -21,7 +29,7 @@ public class InverseBucketizeAge implements InverseMaskingFunction {
         int low = numbers.get(0);
         int high = numbers.get(1);
         for (int j = low; j <= high; j++) {
-            values.add(j);
+            values.add(String.valueOf(j));
         }
 
         return values;

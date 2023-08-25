@@ -15,7 +15,7 @@ public class PoliciesCatalog {
     public List<AccessControlPolicy> policies;
     public MaskingFunctionsCatalog maskingFunctionsCatalog;
 
-    public PoliciesCatalog(Parser parser, MaskingFunctionsCatalog maskingFunctionsCatalog, StatisticsManager statsManager) throws Exception {
+    public PoliciesCatalog(Parser parser, MaskingFunctionsCatalog maskingFunctionsCatalog) throws Exception {
         this.policies = new ArrayList<>();
         this.maskingFunctionsCatalog = maskingFunctionsCatalog;
         // Hard-coded for now
@@ -26,8 +26,9 @@ public class PoliciesCatalog {
             List<String> name = policyNames.get(i);
             String policyString = readFile(path);
             AccessControlPolicy policy = new AccessControlPolicy(policyString, name, parser, maskingFunctionsCatalog);
-            policy.setStatistics(statsManager);
-            policy.indexStats();
+//            policy.setStatistics();
+//            policy.indexStats();
+            this.policies.add(policy);
         }
     }
 }

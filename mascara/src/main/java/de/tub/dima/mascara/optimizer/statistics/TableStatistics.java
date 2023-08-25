@@ -9,14 +9,17 @@ public class TableStatistics {
     public Map<String, AttributeStatistics> attributeStatistics;
     public Map<Integer, String> attributeIndices;
 
-    public TableStatistics(List<String> tableName) {
+    public long size;
+
+    public TableStatistics(List<String> tableName, long size) {
         this.tableName = tableName;
         this.attributeStatistics = new HashMap<>();
         this.attributeIndices = new HashMap<>();
+        this.size = size;
     }
 
-    public void addAttributeStatistics(String attname, float n_distinct, String[] most_common_vals, float[] most_common_freqs, String[] histogram_bounds){
-        this.attributeStatistics.put(attname, new AttributeStatistics(tableName, attname, n_distinct, most_common_vals, most_common_freqs, histogram_bounds));
+    public void addAttributeStatistics(String attname, float n_distinct, String[] most_common_vals, Float[] most_common_freqs, String[] histogram_bounds){
+        this.attributeStatistics.put(attname, new AttributeStatistics(tableName, attname, n_distinct, most_common_vals, most_common_freqs, histogram_bounds, this.size));
     }
 
     public void indexAttribute(int index, String attname){
@@ -29,5 +32,12 @@ public class TableStatistics {
 
     public AttributeStatistics getAttributeStatistics(int index){
         return attributeStatistics.get(attributeIndices.get(index));
+    }
+
+    public void setSize(long size) {
+        this.size = size;
+        for (AttributeStatistics stat : attributeStatistics.values()) {
+            stat.setSize(size);
+        }
     }
 }

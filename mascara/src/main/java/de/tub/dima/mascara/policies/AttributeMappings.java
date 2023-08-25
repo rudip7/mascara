@@ -1,5 +1,6 @@
 package de.tub.dima.mascara.policies;
 
+import de.tub.dima.mascara.optimizer.iqMetadata.AttributeMetadata;
 import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.core.Project;
@@ -26,7 +27,8 @@ public class AttributeMappings {
         List<String> fieldNames = scan.deriveRowType().getFieldNames();
         for (int i = 0; i < fieldList.size(); i++) {
             RexInputRef inputRef = new RexInputRef(i, fieldList.get(i).getType());
-            this.mappings.add(new AttributeMapping(inputRef, fieldNames.get(i)));
+            AttributeMetadata attributeMetadata = new AttributeMetadata(scan.getTable().getQualifiedName(), i, fieldList.get(i).getName());
+            this.mappings.add(new AttributeMapping(attributeMetadata, inputRef, fieldNames.get(i)));
         }
     }
 
@@ -36,8 +38,8 @@ public class AttributeMappings {
         for (int i = 0; i < namedProjects.size(); i++) {
             Pair<RexNode, String> namedProject = namedProjects.get(i);
             if (namedProject.left instanceof RexInputRef) {
-                RexInputRef inputRef = new RexInputRef(i, namedProject.left.getType());
-                newAttributeMappings.add(new AttributeMapping(inputRef,namedProject.right));
+                AttributeMapping attributeMapping = getCompliantAttribute(i);
+                newAttributeMappings.add(attributeMapping.project(i, i, namedProject.right));
             } else {
                 throw new RuntimeException("Queries with generalized projection are not supported yet.");
             }
@@ -52,6 +54,7 @@ public class AttributeMappings {
 
         for (int index : groupSet) {
             AttributeMapping compliantAttribute = getCompliantAttribute(index);
+            compliantAttribute.setGrouping();
             newAttributeMappings.add(compliantAttribute.project(i, i));
             i++;
         }
@@ -59,6 +62,7 @@ public class AttributeMappings {
         for (AggregateCall agg : aggCalls) {
             RexInputRef inputRef = new RexInputRef(i, agg.getType());
             newAttributeMappings.add(new AttributeMapping(inputRef, agg.getName()));
+//            newAttributeMappings.add(new AttributeMapping(inputRef, agg.getName(), agg));
             i++;
         }
         this.mappings = newAttributeMappings;
@@ -113,5 +117,12 @@ public class AttributeMappings {
         return combinedMappings;
     }
 
-
+    @Override
+    public AttributeMappings clone() {
+        AttributeMappings clonedMappings = new AttributeMappings();
+        for (AttributeMapping mapping : this.mappings) {
+            clonedMappings.add(mapping.clone());
+        }
+        return clonedMappings;
+    }
 }

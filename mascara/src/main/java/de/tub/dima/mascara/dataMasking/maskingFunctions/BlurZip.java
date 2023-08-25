@@ -1,11 +1,13 @@
 package de.tub.dima.mascara.dataMasking.maskingFunctions;
 
 import de.tub.dima.mascara.dataMasking.MaskingFunction;
+import de.tub.dima.mascara.dataMasking.inverseFunctions.InverseBlurZip;
 
 public class BlurZip extends MaskingFunction {
 
     public BlurZip() {
         this.name = "BLUR_ZIP";
+        this.inverseMaskingFunction = new InverseBlurZip();
     }
 
     public static String eval(String zipCode, int nFields) {
