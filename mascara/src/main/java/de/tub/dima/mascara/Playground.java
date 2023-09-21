@@ -23,7 +23,8 @@ public class Playground {
         // Simple connection implementation for loading schema from sales.json
 
         Properties connectionProperties = new Properties();
-        connectionProperties.put("url", "jdbc:postgresql://localhost:5432/mascaradb");
+//        connectionProperties.put("url", "jdbc:postgresql://localhost:5432/mascaradb");
+        connectionProperties.put("url", "jdbc:postgresql://localhost:5432/tpchdb");
         connectionProperties.put("driverClassName", "org.postgresql.Driver");
         connectionProperties.put("username", "postgres");
         connectionProperties.put("user", "postgres");

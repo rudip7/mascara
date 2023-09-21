@@ -1,6 +1,8 @@
-package de.tub.dima.mascara.dataMasking.alphabets;
+package de.tub.dima.mascara.dataMasking.medical.alphabets;
 
-public class DoubleAlphabet extends Alphabet{
+import de.tub.dima.mascara.dataMasking.Alphabet;
+
+public class DoubleAlphabet extends Alphabet {
 
     public double lowerBound;
     public double upperBound;
@@ -15,14 +17,14 @@ public class DoubleAlphabet extends Alphabet{
     }
 
 
-    public int indexOf(Double value) {
+    public long indexOf(Double value) {
         if (value > upperBound || value < lowerBound){
             return -1;
         }
-        return (int) ((value - lowerBound) / accuracy);
+        return (long) ((value - lowerBound) / accuracy);
     }
     @Override
-    public int indexOf(String value) {
+    public long indexOf(String value) {
         Double val = Double.parseDouble(value);
         return val == null ? -1 : indexOf(val);
     }

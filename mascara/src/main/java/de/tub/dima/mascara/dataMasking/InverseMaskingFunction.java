@@ -1,7 +1,5 @@
 package de.tub.dima.mascara.dataMasking;
 
-import de.tub.dima.mascara.dataMasking.alphabets.Alphabet;
-
 import java.util.List;
 
 public abstract class InverseMaskingFunction {

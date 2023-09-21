@@ -1,10 +1,10 @@
-package de.tub.dima.mascara.dataMasking.alphabets;
+package de.tub.dima.mascara.dataMasking.medical.alphabets;
 
-import java.util.ArrayList;
+import de.tub.dima.mascara.dataMasking.Alphabet;
+
 import java.util.HashMap;
-import java.util.PriorityQueue;
 
-public class ZipAlphabet extends Alphabet{
+public class ZipAlphabet extends Alphabet {
     private int idx = 0;
     public ZipAlphabet() {
 

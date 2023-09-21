@@ -67,8 +67,8 @@ public class AccessControlPolicy {
         this.protectedTable = scan.getTable();
         this.protectedTableName = scan.getTable().getQualifiedName();
         setStatistics();
-        createAttributesMapping(project, maskingFunctionsCatalog);
         indexStats();
+        createAttributesMapping(project, maskingFunctionsCatalog);
         parser.reset();
     }
 
@@ -82,6 +82,7 @@ public class AccessControlPolicy {
             if (attr instanceof RexInputRef){
                 RexInputRef inputRef = (RexInputRef) attr;
                 RexInputRef newRef = new RexInputRef(i, inputRef.getType());
+                this.protectedStats.indexAttribute(newRef.getIndex(), namedAttr.right);
                 AttributeMetadata attributeMetadata = new AttributeMetadata(this.protectedTableName, inputRef.getIndex());
                 this.attributeMappings.add(new AttributeMapping(attributeMetadata, inputRef, newRef, namedAttr.right));
             } else if (attr instanceof RexCall){
@@ -100,6 +101,7 @@ public class AccessControlPolicy {
                 }
                 RexInputRef newRef = new RexInputRef(i, attr.getType());
                 MaskingFunction maskingFunction = maskingFunctionsCatalog.getMaskingFunctionByName(maskedAttribute.getOperator().getName());
+                this.protectedStats.indexAttribute(newRef.getIndex(), namedAttr.right);
                 AttributeMetadata originalAttribute = new AttributeMetadata(this.protectedTableName, originalRef.getIndex());
                 AttributeMetadata compliantAttribute = new AttributeMetadata(this.policyName, newRef.getIndex(), maskingFunction);
                 this.attributeMappings.add(new AttributeMapping(originalAttribute, originalRef, compliantAttribute, newRef, namedAttr.right, true, maskedAttribute, maskingFunction));

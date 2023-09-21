@@ -1,4 +1,4 @@
-package de.tub.dima.mascara.dataMasking.inverseFunctions;
+package de.tub.dima.mascara.dataMasking.medical.inverseFunctions;
 
 import de.tub.dima.mascara.dataMasking.InverseMaskingFunction;
 

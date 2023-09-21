@@ -1,10 +1,9 @@
 package de.tub.dima.mascara;
 import de.tub.dima.mascara.dataMasking.InverseMaskingFunction;
-import de.tub.dima.mascara.dataMasking.alphabets.IntegerAlphabet;
-import de.tub.dima.mascara.dataMasking.alphabets.ZipAlphabet;
+import de.tub.dima.mascara.dataMasking.tpch.maskingFunctions.NoiseDate;
 import de.tub.dima.mascara.optimizer.statistics.AttributeStatistics;
-import de.tub.dima.mascara.optimizer.statistics.StatisticsManager;
 
+import java.time.LocalDate;
 import java.util.*;
 
 public class TestMF {
@@ -22,12 +21,16 @@ public class TestMF {
         List<String> tableName = List.of("public", "Masked_low");
         String attname = "zip";
         AttributeStatistics stats = mascara.statsManager.getAttributeStatistics(tableName, attname);
-//        InverseMaskingFunction inverseBucketizeAge = mascara.getMaskingFunctionsCatalog().getInverseMaskingFunctionByName("INVERSE_BUCKETIZE_AGE");
-        InverseMaskingFunction inverseBlurZip = mascara.getMaskingFunctionsCatalog().getInverseMaskingFunctionByName("INVERSE_BLUR_ZIP");
-        stats.unmaskStatistics(inverseBlurZip);
+////        InverseMaskingFunction inverseBucketizeAge = mascara.getMaskingFunctionsCatalog().getInverseMaskingFunctionByName("INVERSE_BUCKETIZE_AGE");
+//        InverseMaskingFunction inverseBlurZip = mascara.getMaskingFunctionsCatalog().getInverseMaskingFunctionByName("INVERSE_BLUR_ZIP");
+//        stats.unmaskStatistics(inverseBlurZip);
+//
+////        stats.inverseDistribution(inverseBlurZip);
+////        stats.estimateHistFreq( true);
+//
 
-//        stats.inverseDistribution(inverseBlurZip);
-//        stats.estimateHistFreq( true);
+        AttributeStatistics clone = stats.partialDeepCopy();
+
 
         System.out.println("HALA MADRID!!!");
     }

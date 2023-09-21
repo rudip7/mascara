@@ -1,17 +1,11 @@
 package de.tub.dima.mascara.dataMasking;
 
-import de.tub.dima.mascara.dataMasking.inverseFunctions.InverseBlurPhone;
-import de.tub.dima.mascara.dataMasking.inverseFunctions.InverseBlurZip;
-import de.tub.dima.mascara.dataMasking.inverseFunctions.InverseBucketizeAge;
-import de.tub.dima.mascara.dataMasking.inverseFunctions.InverseGeneralizeDiagnosis;
-import de.tub.dima.mascara.dataMasking.maskingFunctions.*;
+import de.tub.dima.mascara.dataMasking.medical.maskingFunctions.*;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.impl.ScalarFunctionImpl;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class MaskingFunctionsCatalog {
 

@@ -1,4 +1,4 @@
-package de.tub.dima.mascara.dataMasking.maskingFunctions;
+package de.tub.dima.mascara.dataMasking.tpch.maskingFunctions;
 
 import de.tub.dima.mascara.dataMasking.MaskingFunction;
 
@@ -10,7 +10,7 @@ public class AddRelativeNoise extends MaskingFunction {
         this.name = "ADD_RELATIVE_NOISE";
     }
 
-    public static int eval(double value, double relNoise) {
+    public static float eval(float value, float relNoise) {
         assert (relNoise > 0.0 && relNoise < 1.0);
         double lowerBound = value - (value * relNoise);
         double upperBound = value + (value * relNoise);
@@ -18,7 +18,7 @@ public class AddRelativeNoise extends MaskingFunction {
         Random random = new Random();
         double randomValue = lowerBound + (upperBound - lowerBound) * random.nextDouble();
 
-        return (int) Math.round(randomValue);
+        return Math.round(randomValue);
     }
 
 }

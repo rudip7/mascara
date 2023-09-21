@@ -12,6 +12,9 @@ import static de.tub.dima.mascara.utils.Utils.readFile;
 
 public class PoliciesCatalog {
 
+//    List<String> policyPaths = Arrays.asList("src/main/resources/policies/masked_low.sql");
+//    List<List<String>> policyNames = Arrays.asList(Arrays.asList("public", "Masked_low"));
+
     public List<AccessControlPolicy> policies;
     public MaskingFunctionsCatalog maskingFunctionsCatalog;
 
@@ -19,7 +22,7 @@ public class PoliciesCatalog {
         this.policies = new ArrayList<>();
         this.maskingFunctionsCatalog = maskingFunctionsCatalog;
         // Hard-coded for now
-        List<String> policyPaths = Arrays.asList("src/main/resources/policies/masked_low.sql");
+        List<String> policyPaths = Arrays.asList("src/main/resources/policies/medical/masked_low.sql");
         List<List<String>> policyNames = Arrays.asList(Arrays.asList("public", "Masked_low"));
         for (int i = 0; i < policyPaths.size(); i++) {
             String path = policyPaths.get(i);

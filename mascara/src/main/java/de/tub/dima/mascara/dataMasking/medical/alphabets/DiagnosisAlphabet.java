@@ -1,9 +1,10 @@
-package de.tub.dima.mascara.dataMasking.alphabets;
+package de.tub.dima.mascara.dataMasking.medical.alphabets;
 
-import java.util.ArrayList;
+import de.tub.dima.mascara.dataMasking.Alphabet;
+
 import java.util.HashMap;
 
-public class DiagnosisAlphabet extends Alphabet{
+public class DiagnosisAlphabet extends Alphabet {
     public DiagnosisAlphabet() {
         this.alphabet = new HashMap<>();
         String letters = "ABCDEFGHIJKLMNOPQRSTVYZ";

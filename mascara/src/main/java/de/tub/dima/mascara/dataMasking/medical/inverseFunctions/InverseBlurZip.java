@@ -1,8 +1,7 @@
-package de.tub.dima.mascara.dataMasking.inverseFunctions;
+package de.tub.dima.mascara.dataMasking.medical.inverseFunctions;
 
 import de.tub.dima.mascara.dataMasking.InverseMaskingFunction;
-import de.tub.dima.mascara.dataMasking.alphabets.AlphabetCatalog;
-import de.tub.dima.mascara.dataMasking.alphabets.ZipAlphabet;
+import de.tub.dima.mascara.dataMasking.AlphabetCatalog;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +30,7 @@ public class InverseBlurZip extends InverseMaskingFunction {
         for (int i = 0; i < Math.pow(10, 6 - cut); i++) {
             String tail = String.format("%0" + (6 - cut) + "d", i);
             String zipCode = baseZip + tail;
-            int index = alphabet.indexOf(zipCode);
+            long index = alphabet.indexOf(zipCode);
             if (index >= 0){
                 values.add(zipCode);
             }

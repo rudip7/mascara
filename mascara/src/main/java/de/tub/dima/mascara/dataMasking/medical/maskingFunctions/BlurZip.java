@@ -1,7 +1,7 @@
-package de.tub.dima.mascara.dataMasking.maskingFunctions;
+package de.tub.dima.mascara.dataMasking.medical.maskingFunctions;
 
 import de.tub.dima.mascara.dataMasking.MaskingFunction;
-import de.tub.dima.mascara.dataMasking.inverseFunctions.InverseBlurZip;
+import de.tub.dima.mascara.dataMasking.medical.inverseFunctions.InverseBlurZip;
 
 public class BlurZip extends MaskingFunction {
 

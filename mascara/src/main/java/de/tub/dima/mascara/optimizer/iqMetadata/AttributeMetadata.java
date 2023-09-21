@@ -57,7 +57,8 @@ public class AttributeMetadata {
     }
 
     public void triggerEstimateHistFreq(){
-        if(getStats() != null){
+        getStats();
+        if(stats != null){
             if (this.maskingFunction != null && this.maskingFunction.getInverseMaskingFunction() != null){
                 stats.unmaskStatistics(this.maskingFunction.getInverseMaskingFunction());
             } else {

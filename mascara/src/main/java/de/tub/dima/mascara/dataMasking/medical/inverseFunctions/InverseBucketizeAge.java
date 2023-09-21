@@ -1,8 +1,7 @@
-package de.tub.dima.mascara.dataMasking.inverseFunctions;
+package de.tub.dima.mascara.dataMasking.medical.inverseFunctions;
 
 import de.tub.dima.mascara.dataMasking.InverseMaskingFunction;
-import de.tub.dima.mascara.dataMasking.alphabets.AlphabetCatalog;
-import de.tub.dima.mascara.dataMasking.alphabets.IntegerAlphabet;
+import de.tub.dima.mascara.dataMasking.AlphabetCatalog;
 
 import java.util.ArrayList;
 import java.util.List;

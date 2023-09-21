@@ -1,7 +1,7 @@
-package de.tub.dima.mascara.dataMasking.maskingFunctions;
+package de.tub.dima.mascara.dataMasking.medical.maskingFunctions;
 
 import de.tub.dima.mascara.dataMasking.MaskingFunction;
-import de.tub.dima.mascara.dataMasking.inverseFunctions.InverseGeneralizeDiagnosis;
+import de.tub.dima.mascara.dataMasking.medical.inverseFunctions.InverseGeneralizeDiagnosis;
 
 public class GeneralizeDiagnosis extends MaskingFunction {
     public GeneralizeDiagnosis() {

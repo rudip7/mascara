@@ -1,6 +1,8 @@
-package de.tub.dima.mascara.dataMasking.alphabets;
+package de.tub.dima.mascara.dataMasking.medical.alphabets;
 
-public class IntegerAlphabet extends Alphabet{
+import de.tub.dima.mascara.dataMasking.Alphabet;
+
+public class IntegerAlphabet extends Alphabet {
 
     public int lowerBound;
     public int upperBound;
@@ -13,14 +15,14 @@ public class IntegerAlphabet extends Alphabet{
     }
 
 
-    public int indexOf(Integer value) {
+    public long indexOf(Integer value) {
         if (value > upperBound || value < lowerBound){
             return -1;
         }
         return value - lowerBound;
     }
     @Override
-    public int indexOf(String value) {
+    public long indexOf(String value) {
         Integer val = Integer.getInteger(value);
         return val == null ? -1 : indexOf(val);
     }
