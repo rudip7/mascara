@@ -23,10 +23,10 @@ public class MascaraMaster {
     public MascaraMaster(Properties connectionProperties) throws Exception {
         this.maskingFunctionsCatalog = new MaskingFunctionsCatalog();
         this.dbConnector = new DbConnector(connectionProperties, this.maskingFunctionsCatalog);
-        this.parser = new Parser(this.dbConnector.calciteConnection);
+        this.parser = new Parser(this.dbConnector.calciteConnection, (String) connectionProperties.get("schema"));
         this.statsManager = StatisticsManager.getInstance();
         this.statsManager.setConnector(dbConnector);
-        this.policiesCatalog = new PoliciesCatalog(this.parser, this.maskingFunctionsCatalog);
+        this.policiesCatalog = new PoliciesCatalog(this.dbConnector, this.parser, this.maskingFunctionsCatalog);
         this.queryModifier = new QueryModifier(this.parser, this.policiesCatalog);
     }
 

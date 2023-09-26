@@ -121,10 +121,10 @@ public class AttributeStatistics implements Cloneable{
 
     public int getBucketIdx(String val) {
         if (alphabet != null){
-            int idx = alphabet.
-            if (val.compareTo(histogramBounds[0]) >= 0){
+            long idx = alphabet.indexOf(val);
+            if (alphabet.indexOf(histogramBounds[0]) <= idx){
                 for (int i = 1; i < histogramBounds.length; i++) {
-                    if (val.compareTo(histogramBounds[i]) < 0) {
+                    if (alphabet.indexOf(histogramBounds[0]) >= idx) {
                         return i - 1;
                     }
                 }
@@ -134,9 +134,14 @@ public class AttributeStatistics implements Cloneable{
     }
 
     public int getUnmskBucketIdx(String val) {
-        for (int i = 1; i < unmskHistogramBounds.length; i++) {
-            if (val.compareTo(unmskHistogramBounds[i]) < 0) {
-                return i - 1;
+        if (alphabet != null) {
+            long idx = alphabet.indexOf(val);
+            if (alphabet.indexOf(histogramBounds[0]) <= idx){
+                for (int i = 1; i < unmskHistogramBounds.length; i++) {
+                    if (alphabet.indexOf(unmskHistogramBounds[0]) >= idx) {
+                        return i - 1;
+                    }
+                }
             }
         }
         return -1;

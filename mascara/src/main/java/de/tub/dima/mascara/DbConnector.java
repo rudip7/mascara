@@ -1,5 +1,6 @@
 package de.tub.dima.mascara;
 
+import com.google.common.collect.ImmutableList;
 import de.tub.dima.mascara.dataMasking.MaskingFunctionsCatalog;
 import de.tub.dima.mascara.optimizer.statistics.TableStatistics;
 import org.apache.calcite.adapter.jdbc.JdbcSchema;
@@ -10,6 +11,7 @@ import org.apache.calcite.schema.SchemaPlus;
 
 import javax.sql.DataSource;
 import java.sql.*;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
@@ -42,6 +44,9 @@ public class DbConnector {
 
         JdbcSchema jdbcSchema = JdbcSchema.create(rootSchema, schemaName, ds, null, schemaName);
         rootSchema.add(schemaName, jdbcSchema);
+//        rootSchema.setPath(ImmutableList.of(ImmutableList.of("public")));
+//        this.calciteConnection.setSchema("public");
+//        rootSchema.setPath(ImmutableList.of(ImmutableList.of("public")));
 
         // Add masking functions to schema
         maskingFunctionsCatalog.addToSchema(rootSchema);
@@ -51,7 +56,7 @@ public class DbConnector {
 
     public TableStatistics getStatistics(List<String> tableName, long size) throws SQLException {
         TableStatistics tableStatistics = new TableStatistics(tableName, size);
-        String query = "SELECT attname, n_distinct, most_common_vals::text::text[] as most_common_vals, most_common_freqs, histogram_bounds::text::text[] as histogram_bounds FROM pg_stats WHERE tablename='"+tableName.get(1)+"'";
+        String query = "SELECT attname, n_distinct, most_common_vals::text::text[] as most_common_vals, most_common_freqs, histogram_bounds::text::text[] as histogram_bounds FROM pg_stats WHERE tablename='"+tableName.get(tableName.size()-1)+"'";
         try (Statement stmt = jdbcConnection.createStatement()) {
             ResultSet rs = stmt.executeQuery(query);
             while (rs.next()) {
@@ -73,7 +78,12 @@ public class DbConnector {
 
     public Long getTableSize(List<String> tableName) throws SQLException {
         Long size = -1L;
-        String query = "SELECT count(*) FROM "+tableName.get(0)+".\""+tableName.get(1)+"\"";
+        String query;
+        if (tableName.size() == 2){
+            query = "SELECT count(*) FROM "+tableName.get(0)+".\""+tableName.get(1)+"\"";
+        } else {
+            query = "SELECT count(*) FROM "+tableName.get(tableName.size()-1);
+        }
         try (Statement stmt = jdbcConnection.createStatement()) {
             ResultSet rs = stmt.executeQuery(query);
             while (rs.next()) {
@@ -83,5 +93,19 @@ public class DbConnector {
             throw e;
         }
         return size;
+    }
+
+    public String getPolicyDefinition(String policyName) throws SQLException {
+        String definition = null;
+        String query = "SELECT definition FROM pg_matviews WHERE matviewname = '"+policyName+"'";
+        try (Statement stmt = jdbcConnection.createStatement()) {
+            ResultSet rs = stmt.executeQuery(query);
+            while (rs.next()) {
+                definition = rs.getString(1);
+            }
+        } catch (SQLException e) {
+            throw e;
+        }
+        return definition;
     }
 }

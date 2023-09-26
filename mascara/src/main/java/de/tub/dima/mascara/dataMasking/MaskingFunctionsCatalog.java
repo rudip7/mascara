@@ -1,6 +1,8 @@
 package de.tub.dima.mascara.dataMasking;
 
 import de.tub.dima.mascara.dataMasking.medical.maskingFunctions.*;
+import de.tub.dima.mascara.dataMasking.tpch.maskingFunctions.*;
+import de.tub.dima.mascara.dataMasking.tpch.maskingFunctions.AddRelativeNoise;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.impl.ScalarFunctionImpl;
 
@@ -15,15 +17,12 @@ public class MaskingFunctionsCatalog {
 
     public MaskingFunctionsCatalog() {
         this.maskingFunctions = new ArrayList<>();
+        this.maskingFunctions.add(new AddNoiseDate());
+        this.maskingFunctions.add(new GeneralizeDate());
+        this.maskingFunctions.add(new Suppress());
+        this.maskingFunctions.add(new Bucketize());
         this.maskingFunctions.add(new AddRelativeNoise());
-        BlurPhone blurPhone = new BlurPhone();
-        this.maskingFunctions.add(blurPhone);
-        BlurZip blurZip = new BlurZip();
-        this.maskingFunctions.add(blurZip);
-        BucketizeAge bucketizeAge = new BucketizeAge();
-        this.maskingFunctions.add(bucketizeAge);
-        GeneralizeDiagnosis generalizeDiagnosis = new GeneralizeDiagnosis();
-        this.maskingFunctions.add(generalizeDiagnosis);
+
 
         this.inverseMaskingFunctions = new ArrayList<>();
         for (MaskingFunction maskingFunction : this.maskingFunctions) {
@@ -36,7 +35,9 @@ public class MaskingFunctionsCatalog {
     public void addToSchema(SchemaPlus schema){
         for (MaskingFunction function : maskingFunctions) {
             schema.add(function.name, ScalarFunctionImpl.create(function.getClass(), "eval"));
+//            schema.add();
         }
+//        schema.add("GENERALIZE_DATE", new GeneralizeDate2());
     }
 
     public MaskingFunction getMaskingFunctionByName(String name){

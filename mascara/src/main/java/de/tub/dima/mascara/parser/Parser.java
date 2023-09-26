@@ -7,8 +7,18 @@ import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.SqlOperatorTable;
+import org.apache.calcite.sql.fun.SqlLibrary;
+import org.apache.calcite.sql.fun.SqlLibraryOperatorTableFactory;
 import org.apache.calcite.sql.parser.SqlParser;
+import org.apache.calcite.sql.parser.SqlParserImplFactory;
+import org.apache.calcite.sql.parser.impl.SqlParserImpl;
+import org.apache.calcite.sql.validate.SqlConformance;
+import org.apache.calcite.sql.validate.SqlConformanceEnum;
+import org.apache.calcite.sql.validate.SqlValidator;
 import org.apache.calcite.tools.*;
+
+import java.util.EnumSet;
 
 public class Parser {
     public final Planner planner;
@@ -16,12 +26,16 @@ public class Parser {
     public final CalciteConnection connection;
     public final FrameworkConfig frameworkConfig;
 
-    public Parser(CalciteConnection connection) {
+    public Parser(CalciteConnection connection, String defaultSchema) {
         this.connection = connection;
-
+        SqlOperatorTable operatorTable = SqlLibraryOperatorTableFactory.INSTANCE.getOperatorTable(
+                SqlLibrary.POSTGRESQL);
         this.frameworkConfig = Frameworks.newConfigBuilder()
                 .parserConfig(getParserConfig(connection.config()))
-                .defaultSchema(connection.getRootSchema())
+//                .operatorTable(SqlLibraryOperatorTableFactory.INSTANCE.getOperatorTable(
+//                        SqlLibrary.POSTGRESQL))
+                .sqlValidatorConfig(SqlValidator.Config.DEFAULT.withIdentifierExpansion(true))
+                .defaultSchema(connection.getRootSchema().getSubSchema(defaultSchema))
                 .build();
 
         this.planner = Frameworks.getPlanner(frameworkConfig);
@@ -33,11 +47,10 @@ public class Parser {
         parserConfig.setCaseSensitive(config.caseSensitive());
         parserConfig.setUnquotedCasing(config.unquotedCasing());
         parserConfig.setQuotedCasing(config.quotedCasing());
-        parserConfig.setConformance(config.conformance());
+        parserConfig.setConformance(SqlConformanceEnum.BABEL);
 
         return parserConfig.build();
     }
-
     public SqlNode parse(String sql) throws Exception {
         return planner.parse(sql);
     }
