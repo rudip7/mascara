@@ -7,6 +7,8 @@ public abstract class MaskingFunction {
     public boolean aggregable = false;
     public InverseMaskingFunction inverseMaskingFunction = null;
 
+    public boolean parametrizedInverse = false;
+
     public String getName() {
         return name;
     }
@@ -15,7 +17,17 @@ public abstract class MaskingFunction {
         return aggregable;
     }
 
+    public boolean hasParametrizedInverse() {
+        return parametrizedInverse;
+    }
+
     public InverseMaskingFunction getInverseMaskingFunction() {
         return inverseMaskingFunction;
+    }
+    public void setInverseMaskingFunction(List<Object> parameters) {}
+
+    @Override
+    public MaskingFunction clone(){
+        return this;
     }
 }

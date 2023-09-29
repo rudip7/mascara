@@ -35,14 +35,12 @@ public class MaskingFunctionsCatalog {
     public void addToSchema(SchemaPlus schema){
         for (MaskingFunction function : maskingFunctions) {
             schema.add(function.name, ScalarFunctionImpl.create(function.getClass(), "eval"));
-//            schema.add();
         }
-//        schema.add("GENERALIZE_DATE", new GeneralizeDate2());
     }
 
     public MaskingFunction getMaskingFunctionByName(String name){
         for (MaskingFunction function : maskingFunctions) {
-            if (function.name.equals(name)){
+            if (function.name.equalsIgnoreCase(name)){
                 return function;
             }
         }

@@ -51,7 +51,8 @@ public class CompliantPlanner extends RelVisitor {
 //                this.iqMetadata.getProjectedAttributes(this.attributeMappings, table.getQualifiedName(), policy.getPolicyName());
             } else {
                 builder.scan(policy.policyName);
-                attributeMappings = policy.attributeMappings;
+                this.queryAttributes = policy.attributeMappings.clone();
+                this.attributeMappings = policy.attributeMappings.clone();
             }
         } else if (node instanceof Filter) {
             Filter filter = (Filter) node;
@@ -249,15 +250,15 @@ public class CompliantPlanner extends RelVisitor {
                 }
             }
 
-            RexLiteral literal;
+            RexNode literal;
             RexInputRef inputRef;
             boolean literalIsLeft = false;
 
-            if (condition.operands.get(0) instanceof RexInputRef && condition.operands.get(1) instanceof RexLiteral){
+            if (condition.operands.get(0) instanceof RexInputRef && !(condition.operands.get(1) instanceof RexInputRef)){
                 inputRef = (RexInputRef) condition.operands.get(0);
-                literal = (RexLiteral) condition.operands.get(1);
-            } else if (condition.operands.get(0) instanceof RexLiteral && condition.operands.get(1) instanceof RexInputRef) {
-                literal = (RexLiteral) condition.operands.get(0);
+                literal = condition.operands.get(1);
+            } else if (!(condition.operands.get(0) instanceof RexInputRef) && condition.operands.get(1) instanceof RexInputRef) {
+                literal = condition.operands.get(0);
                 inputRef = (RexInputRef) condition.operands.get(1);
                 literalIsLeft = true;
             } else {

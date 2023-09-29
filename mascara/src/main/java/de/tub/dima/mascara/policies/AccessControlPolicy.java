@@ -15,9 +15,11 @@ import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexInputRef;
+import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.util.Pair;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -88,12 +90,15 @@ public class AccessControlPolicy {
             } else if (attr instanceof RexCall){
                 RexCall maskedAttribute = (RexCall) attr;
                 RexInputRef originalRef = null;
+                List<Object> parameters = new ArrayList<>();
                 for (RexNode operand : maskedAttribute.operands) {
                     if (operand instanceof RexInputRef){
                         if (originalRef != null) {
                             throw new IllegalArgumentException("Currently we only support masking functions over a single attribute.");
                         }
                         originalRef = (RexInputRef) operand;
+                    } else if(operand instanceof RexLiteral){
+                        parameters.add(((RexLiteral) operand).getValue());
                     }
                 }
                 if (originalRef == null){
@@ -101,6 +106,10 @@ public class AccessControlPolicy {
                 }
                 RexInputRef newRef = new RexInputRef(i, attr.getType());
                 MaskingFunction maskingFunction = maskingFunctionsCatalog.getMaskingFunctionByName(maskedAttribute.getOperator().getName());
+                if (maskingFunction.hasParametrizedInverse()){
+                    maskingFunction = maskingFunction.clone();
+                    maskingFunction.setInverseMaskingFunction(parameters);
+                }
                 this.protectedStats.indexAttribute(newRef.getIndex(), namedAttr.right);
                 AttributeMetadata originalAttribute = new AttributeMetadata(this.protectedTableName, originalRef.getIndex());
                 AttributeMetadata compliantAttribute = new AttributeMetadata(this.policyName, newRef.getIndex(), maskingFunction);

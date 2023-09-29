@@ -12,6 +12,7 @@ import org.apache.calcite.sql.fun.SqlLibrary;
 import org.apache.calcite.sql.fun.SqlLibraryOperatorTableFactory;
 import org.apache.calcite.sql.parser.SqlParser;
 import org.apache.calcite.sql.parser.SqlParserImplFactory;
+import org.apache.calcite.sql.parser.babel.SqlBabelParserImpl;
 import org.apache.calcite.sql.parser.impl.SqlParserImpl;
 import org.apache.calcite.sql.validate.SqlConformance;
 import org.apache.calcite.sql.validate.SqlConformanceEnum;
@@ -48,6 +49,7 @@ public class Parser {
         parserConfig.setUnquotedCasing(config.unquotedCasing());
         parserConfig.setQuotedCasing(config.quotedCasing());
         parserConfig.setConformance(SqlConformanceEnum.BABEL);
+
 
         return parserConfig.build();
     }

@@ -10,25 +10,28 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class InverseGeneralizeDate extends InverseMaskingFunction {
+    private String level;
+
     public InverseGeneralizeDate() {
         this.name = "INVERSE_GENERALIZE_DATE";
         this.alphabet = AlphabetCatalog.getInstance().getAlphabet("dateAlphabet");
+        this.level = "MONTH";
     }
 
+    public InverseGeneralizeDate(String level) {
+        this();
+        this.level = level;
+    }
     @Override
     public List<String> eval(String maskedValue) {
         List<String> possibleDates = new ArrayList<>();
-        LocalDate startDate = null;
+        LocalDate startDate = LocalDate.parse(maskedValue);
         LocalDate endDate= null;
         LocalDate currentDate;
-        if (maskedValue.length() == 7) {
-            YearMonth yearMonth = YearMonth.parse(maskedValue);
-
-            startDate = yearMonth.atDay(1);
-            endDate = yearMonth.atEndOfMonth();
-        } else if (maskedValue.length() == 4) {
-            startDate = LocalDate.of(Integer.parseInt(maskedValue), 1,1);
-            endDate = LocalDate.of(Integer.parseInt(maskedValue), 12,31);
+        if (level.equals("MONTH")) {
+            endDate = startDate.plusDays(startDate.lengthOfMonth());
+        } else if (level.equals("YEAR")) {
+            endDate = LocalDate.of(startDate.getYear(), 12,31);
         }
         if (startDate != null && endDate != null){
             currentDate = startDate;

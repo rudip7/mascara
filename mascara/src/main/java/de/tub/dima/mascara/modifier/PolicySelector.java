@@ -12,6 +12,8 @@ import java.util.List;
 public class PolicySelector {
     public PoliciesCatalog policiesCatalog;
 
+
+
     public PolicySelector(PoliciesCatalog policiesCatalog) {
         this.policiesCatalog = policiesCatalog;
     }

@@ -65,7 +65,7 @@ public class AttributeMapping {
     public boolean isMasked() {
         return masked;
     }
-    public RexCall maskValue(RexLiteral literal, RelBuilder builder){
+    public RexCall maskValue(RexNode literal, RelBuilder builder){
         if (!masked){
             return null;
         }

@@ -52,6 +52,12 @@
             <artifactId>postgresql</artifactId>
             <version>42.6.0</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.calcite</groupId>
+            <artifactId>calcite-babel</artifactId>
+            <version>${calcite.version}</version>
+        </dependency>
+
     </dependencies>
 
     <build>

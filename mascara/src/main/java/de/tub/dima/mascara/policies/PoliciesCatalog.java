@@ -29,13 +29,13 @@ public class PoliciesCatalog {
 
         for (int i = 0; i < policyNames.size(); i++) {
             String name = policyNames.get(i);
-//            String policyDefinition = dbConnector.getPolicyDefinition(name);
-//            if (policyDefinition.charAt(policyDefinition.length() - 1) == ';'){
-//                policyDefinition = policyDefinition.substring(0, policyDefinition.length() - 1);
-//            }
-//            policyDefinition = policyDefinition.replace("::", " :: ");
-            String policyDefinition = "SELECT generalize_date(lineitem.l_shipdate, 'MONTH') AS l_shipdate\n" +
-                    "FROM lineitem";
+            String policyDefinition = dbConnector.getPolicyDefinition(name);
+            if (policyDefinition.charAt(policyDefinition.length() - 1) == ';'){
+                policyDefinition = policyDefinition.substring(0, policyDefinition.length() - 1);
+            }
+            policyDefinition = policyDefinition.replace("::text", "");
+//            String policyDefinition = "SELECT lineitem.l_shipdate :: text AS l_shipdate\n" +
+//                    "FROM lineitem";
             AccessControlPolicy policy = new AccessControlPolicy(policyDefinition, Arrays.asList(name), parser, maskingFunctionsCatalog);
 //            policy.setStatistics();
 //            policy.indexStats();
