@@ -1,8 +1,9 @@
 package de.tub.dima.mascara.dataMasking.medical.alphabets;
 
 import de.tub.dima.mascara.dataMasking.Alphabet;
+import de.tub.dima.mascara.dataMasking.DiscretizedAlphabet;
 
-public class DoubleAlphabet extends Alphabet {
+public class DoubleAlphabet extends DiscretizedAlphabet {
 
     public double lowerBound;
     public double upperBound;
@@ -25,7 +26,38 @@ public class DoubleAlphabet extends Alphabet {
     }
     @Override
     public long indexOf(String value) {
-        Double val = Double.parseDouble(value);
-        return val == null ? -1 : indexOf(val);
+        try {
+            Double val = Double.parseDouble(value);
+            return indexOf(val);
+        } catch (NumberFormatException e){
+            return -1;
+        }
+    }
+
+    @Override
+    public String getDiscretizedValue(String value) {
+        try {
+            Double doubleValue = Double.parseDouble(value);
+            double bNumber = Math.floor(doubleValue / accuracy);
+            Double discretizedValue = bNumber * accuracy;
+            return discretizedValue.toString();
+        } catch (NumberFormatException e){
+            return value;
+        }
+    }
+
+    @Override
+    public boolean isDiscretizeble(String sampleValue) {
+        try {
+            Double doubleValue = Double.parseDouble(sampleValue);
+            return true;
+        } catch (NumberFormatException e){
+            return false;
+        }
+    }
+
+
+    public double getAccuracy() {
+        return accuracy;
     }
 }

@@ -12,8 +12,6 @@ public class StatisticsManager {
     public Map<List<String>, Long> tableSizes;
     public DbConnector connector;
 
-
-
     private static StatisticsManager instance;
 
     static {
@@ -48,6 +46,8 @@ public class StatisticsManager {
             }
         }
     }
+
+
 
     public Long getTableSize(List<String> tableName) {
         Long size = tableSizes.get(tableName);
@@ -86,5 +86,23 @@ public class StatisticsManager {
         } else {
             return null;
         }
+    }
+
+    public AttributeStatistics setAttributeStatistics(List<String> tableName, String attname, AttributeStatistics newStatistics){
+        TableStatistics tableStatistics = getTableStatistics(tableName);
+        if (tableStatistics != null){
+            tableStatistics.setAttributeStatistics(attname, newStatistics);
+            return newStatistics;
+        }
+        return null;
+    }
+
+    public AttributeStatistics setAttributeStatistics(List<String> tableName, int index, AttributeStatistics newStatistics){
+        TableStatistics tableStatistics = getTableStatistics(tableName);
+        if (tableStatistics != null){
+            tableStatistics.setAttributeStatistics(index, newStatistics);
+            return newStatistics;
+        }
+        return null;
     }
 }

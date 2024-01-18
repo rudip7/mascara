@@ -1,0 +1,10 @@
+{
+  "public": {
+    "lineitem": {
+      "l_extendedprice" : "discretizedIntegerAlphabet"
+    },
+    "orders": {
+      "o_orderdate" : "dateAlphabet"
+    }
+  }
+}

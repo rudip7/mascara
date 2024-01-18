@@ -41,7 +41,7 @@ public class QueryModifier {
             
             if (compliantPlan != null){
                 DebuggingTools.printPlan("[Compliant plan]:", compliantPlan);
-                compliantPlans.add(new CompliantPlan(RelRoot.of(compliantPlan, logicalPlan.kind), new ArrayList<>(policies.values())));
+                compliantPlans.add(new CompliantPlan(RelRoot.of(compliantPlan, logicalPlan.kind), new ArrayList<>(policies.values()), compliantPlanner.getQueryAttributes()));
             }
         }
         return compliantPlans;

@@ -1,10 +1,8 @@
 package de.tub.dima.mascara.policies;
 
-import de.tub.dima.mascara.dataMasking.MaskingFunction;
-import de.tub.dima.mascara.dataMasking.MaskingFunctionsCatalog;
+import de.tub.dima.mascara.dataMasking.*;
 import de.tub.dima.mascara.optimizer.iqMetadata.AttributeMetadata;
-import de.tub.dima.mascara.optimizer.statistics.TableStatistics;
-import de.tub.dima.mascara.optimizer.statistics.StatisticsManager;
+import de.tub.dima.mascara.optimizer.statistics.*;
 import de.tub.dima.mascara.parser.Parser;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelNode;
@@ -30,7 +28,7 @@ public class AccessControlPolicy {
     public List<String> policyName;
     public List<String> protectedTableName;
     public AttributeMappings attributeMappings;
-    public TableStatistics protectedStats;
+    public TableStatistics policyStats;
     public TableStatistics originalStats;
 
 
@@ -78,16 +76,21 @@ public class AccessControlPolicy {
         List<Pair<RexNode, String>> projects = project.getNamedProjects();
         for (int i = 0; i < projects.size(); i++) {
             Pair<RexNode, String> namedAttr = projects.get(i);
+            if (namedAttr.right.endsWith("_stat")){
+                continue;
+            }
             RexNode attr = namedAttr.left;
             // RexInputRef -> unmasked attributes
             // RexCall -> masked attributes
             if (attr instanceof RexInputRef){
                 RexInputRef inputRef = (RexInputRef) attr;
                 RexInputRef newRef = new RexInputRef(i, inputRef.getType());
-                this.protectedStats.indexAttribute(newRef.getIndex(), namedAttr.right);
+                this.policyStats.indexAttribute(newRef.getIndex(), namedAttr.right);
                 AttributeMetadata attributeMetadata = new AttributeMetadata(this.protectedTableName, inputRef.getIndex());
                 this.attributeMappings.add(new AttributeMapping(attributeMetadata, inputRef, newRef, namedAttr.right));
             } else if (attr instanceof RexCall){
+                AlphabetCatalog.getInstance().copyAlphabet(protectedTableName, namedAttr.right, policyName, namedAttr.right);
+
                 RexCall maskedAttribute = (RexCall) attr;
                 RexInputRef originalRef = null;
                 List<Object> parameters = new ArrayList<>();
@@ -110,7 +113,18 @@ public class AccessControlPolicy {
                     maskingFunction = maskingFunction.clone();
                     maskingFunction.setInverseMaskingFunction(parameters);
                 }
-                this.protectedStats.indexAttribute(newRef.getIndex(), namedAttr.right);
+                this.policyStats.indexAttribute(newRef.getIndex(), namedAttr.right);
+
+                // Change statistics to masked statistics
+                AttributeStatistics attributeStatistics = this.policyStats.getAttributeStatistics(newRef.getIndex());
+                Alphabet alphabet = AlphabetCatalog.getInstance().getAlphabet(this.protectedTableName, namedAttr.right);
+                if (alphabet != null && alphabet instanceof DiscretizedAlphabet && ((DiscretizedAlphabet) alphabet).shouldDiscretize()){
+                    this.policyStats.setAttributeStatistics(newRef.getIndex(), new DiscretizedMaskedAttributeStatistics(attributeStatistics));
+                } else {
+                    this.policyStats.setAttributeStatistics(newRef.getIndex(), new MaskedAttributeStatistics(attributeStatistics));
+                }
+
+
                 AttributeMetadata originalAttribute = new AttributeMetadata(this.protectedTableName, originalRef.getIndex());
                 AttributeMetadata compliantAttribute = new AttributeMetadata(this.policyName, newRef.getIndex(), maskingFunction);
                 this.attributeMappings.add(new AttributeMapping(originalAttribute, originalRef, compliantAttribute, newRef, namedAttr.right, true, maskedAttribute, maskingFunction));
@@ -126,9 +140,11 @@ public class AccessControlPolicy {
         return policyName;
     }
 
+
+
     public void setStatistics(){
         StatisticsManager statsManager = StatisticsManager.getInstance();
-        this.protectedStats = statsManager.getStatistics(policyName);
+        this.policyStats = statsManager.getStatistics(policyName);
         this.originalStats = statsManager.getStatistics(protectedTableName);
     }
 
@@ -143,7 +159,7 @@ public class AccessControlPolicy {
     public void indexProtectedStats(){
         for (int i = 0; i < this.attributeMappings.size(); i++) {
             AttributeMapping mapping = this.attributeMappings.get(i);
-            this.protectedStats.indexAttribute(mapping.newRef.getIndex(), mapping.getName());
+            this.policyStats.indexAttribute(mapping.newRef.getIndex(), mapping.getName());
         }
     }
 

@@ -16,11 +16,17 @@ public abstract class Alphabet {
         return -1;
     }
 
+    /**
+     * Computes the number of possible values within the bin where the upperbound is exclusive
+     * @param lowerBound
+     * @param upperBound
+     * @return
+     */
     public long binNDistinct(String lowerBound, String upperBound){
         long low = indexOf(lowerBound);
         long up = indexOf(upperBound);
         if (low >= 0 && up >= 0 && up > low){
-            return up - low;
+            return up - low - 1;
         }
         if (up == low){
             return 1;

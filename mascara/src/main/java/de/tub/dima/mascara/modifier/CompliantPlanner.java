@@ -41,6 +41,7 @@ public class CompliantPlanner extends RelVisitor {
         if (node instanceof TableScan){
             TableScan scan = (TableScan) node;
             RelOptTable table = scan.getTable();
+
             AccessControlPolicy policy = policies.get(table);
             if (policy == null){
 //                builder.scan(node.getTable().getQualifiedName());
@@ -290,6 +291,10 @@ public class CompliantPlanner extends RelVisitor {
             }
         }
         return null;
+    }
+
+    public AttributeMappings getQueryAttributes() {
+        return queryAttributes;
     }
 }
 

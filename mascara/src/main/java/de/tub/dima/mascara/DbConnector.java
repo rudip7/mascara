@@ -68,7 +68,12 @@ public class DbConnector {
                 Float[] most_common_freqs = mostCommonFreqs == null ? null : (Float[]) mostCommonFreqs.getArray();
                 Array histogramBounds = rs.getArray("histogram_bounds");
                 String[] histogram_bounds = histogramBounds == null ? null : (String[]) histogramBounds.getArray();
-                tableStatistics.addAttributeStatistics(attname, n_distinct, most_common_vals, most_common_freqs, histogram_bounds);
+                if (attname.endsWith("_stat")){
+                    attname = attname.substring(0, attname.length() - "_stat".length());
+                    tableStatistics.addAttributeStatistics(attname, n_distinct, most_common_vals, most_common_freqs, histogram_bounds, true);
+                } else {
+                    tableStatistics.addAttributeStatistics(attname, n_distinct, most_common_vals, most_common_freqs, histogram_bounds);
+                }
             }
         } catch (SQLException e) {
             throw e;

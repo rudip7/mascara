@@ -19,6 +19,7 @@ public class PoliciesCatalog {
         this.policies = new ArrayList<>();
         this.maskingFunctionsCatalog = maskingFunctionsCatalog;
 
+        String schemaName = "public";
         List<String> policyNames = Arrays.asList(
                 "c_p1",
                 "l_p1",
@@ -36,7 +37,7 @@ public class PoliciesCatalog {
             policyDefinition = policyDefinition.replace("::text", "");
 //            String policyDefinition = "SELECT lineitem.l_shipdate :: text AS l_shipdate\n" +
 //                    "FROM lineitem";
-            AccessControlPolicy policy = new AccessControlPolicy(policyDefinition, Arrays.asList(name), parser, maskingFunctionsCatalog);
+            AccessControlPolicy policy = new AccessControlPolicy(policyDefinition, Arrays.asList(schemaName, name), parser, maskingFunctionsCatalog);
 //            policy.setStatistics();
 //            policy.indexStats();
             this.policies.add(policy);

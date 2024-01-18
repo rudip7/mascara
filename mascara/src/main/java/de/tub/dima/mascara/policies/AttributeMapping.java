@@ -2,11 +2,10 @@ package de.tub.dima.mascara.policies;
 
 import de.tub.dima.mascara.dataMasking.MaskingFunction;
 import de.tub.dima.mascara.optimizer.iqMetadata.AttributeMetadata;
-import org.apache.calcite.rel.core.AggregateCall;
+import de.tub.dima.mascara.optimizer.statistics.AttributeStatistics;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexInputRef;
-import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.tools.RelBuilder;
 
@@ -120,6 +119,14 @@ public class AttributeMapping {
         if (compliantAttribute != null){
             compliantAttribute.setGrouping();
         }
+    }
+
+    public AttributeStatistics getOriginalStats() {
+        return originalAttribute.getStats();
+    }
+
+    public AttributeStatistics getCompliantStats() {
+        return compliantAttribute.getStats();
     }
 
     @Override

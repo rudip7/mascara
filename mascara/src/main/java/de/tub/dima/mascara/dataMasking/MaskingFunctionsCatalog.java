@@ -21,6 +21,7 @@ public class MaskingFunctionsCatalog {
         this.maskingFunctions.add(new GeneralizeDate());
         this.maskingFunctions.add(new Suppress());
         this.maskingFunctions.add(new Bucketize());
+        this.maskingFunctions.add(new BucketizeLow());
         this.maskingFunctions.add(new AddRelativeNoise());
 
 

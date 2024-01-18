@@ -2,6 +2,7 @@ package de.tub.dima.mascara.optimizer.iqMetadata;
 
 import de.tub.dima.mascara.dataMasking.MaskingFunction;
 import de.tub.dima.mascara.optimizer.statistics.AttributeStatistics;
+import de.tub.dima.mascara.optimizer.statistics.MaskedAttributeStatistics;
 import de.tub.dima.mascara.optimizer.statistics.StatisticsManager;
 
 import java.util.List;
@@ -60,7 +61,13 @@ public class AttributeMetadata {
         getStats();
         if(stats != null){
             if (this.maskingFunction != null && this.maskingFunction.getInverseMaskingFunction() != null){
-                stats.unmaskStatistics(this.maskingFunction.getInverseMaskingFunction());
+                if (!(stats instanceof MaskedAttributeStatistics)){
+                    System.out.println("This was not expected");
+//                    StatisticsManager statsManager = StatisticsManager.getInstance();
+//                    MaskedAttributeStatistics maskedStatistics = new MaskedAttributeStatistics(stats);
+//                    this.stats = this.index >= 0 ? statsManager.setAttributeStatistics(tableName, index, maskedStatistics) : statsManager.setAttributeStatistics(tableName, attname, maskedStatistics);
+                }
+                ((MaskedAttributeStatistics) stats).unmaskStatistics(this.maskingFunction.getInverseMaskingFunction());
             } else {
                 stats.estimateHistFreq(false);
             }

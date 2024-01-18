@@ -1,44 +1,45 @@
-package de.tub.dima.mascara.dataMasking.medical.alphabets;
+package de.tub.dima.mascara.dataMasking.tpch.alphabets;
 
 import de.tub.dima.mascara.dataMasking.Alphabet;
 import de.tub.dima.mascara.dataMasking.DiscretizedAlphabet;
 
-public class IntegerAlphabet extends DiscretizedAlphabet {
+public class FloatAlphabet extends DiscretizedAlphabet {
 
-    public long lowerBound;
-    public long upperBound;
-
-    public IntegerAlphabet(int lowerBound, int upperBound) {
+    public double lowerBound;
+    public double upperBound;
+    public double accuracy;
+    public FloatAlphabet(float lowerBound, float upperBound, float accuracy) {
         this.lowerBound = lowerBound;
         this.upperBound = upperBound;
+        this.accuracy = accuracy;
     }
-    public IntegerAlphabet(){
-        this(Integer.MIN_VALUE + 1, Integer.MAX_VALUE);
-    }
-
-    public IntegerAlphabet(boolean discretize){
-        this();
-        this.discretize = discretize;
+    public FloatAlphabet(){
+        this(Float.MIN_VALUE, Float.MAX_VALUE, 0.1f);
     }
 
-    public long indexOf(Integer value) {
+
+    public long indexOf(Double value) {
         if (value > upperBound || value < lowerBound){
             return -1;
         }
-        return value - lowerBound;
+        return (long) ((value - lowerBound) / accuracy);
     }
-
     @Override
     public long indexOf(String value) {
-        Double parsedDouble = Double.parseDouble(value);
-        return parsedDouble == null || parsedDouble % 1 != 0 ? -1 : indexOf(parsedDouble.intValue());
+        try {
+            Double val = Double.parseDouble(value);
+            return indexOf(val);
+        } catch (NumberFormatException e){
+            return -1;
+        }
     }
 
     @Override
     public String getDiscretizedValue(String value) {
         try {
             Double doubleValue = Double.parseDouble(value);
-            Double discretizedValue = Math.floor(doubleValue);
+            double bNumber = Math.floor(doubleValue / accuracy);
+            Double discretizedValue = bNumber * accuracy;
             return discretizedValue.toString();
         } catch (NumberFormatException e){
             return value;
@@ -53,5 +54,9 @@ public class IntegerAlphabet extends DiscretizedAlphabet {
         } catch (NumberFormatException e){
             return false;
         }
+    }
+
+    public double getAccuracy() {
+        return accuracy;
     }
 }

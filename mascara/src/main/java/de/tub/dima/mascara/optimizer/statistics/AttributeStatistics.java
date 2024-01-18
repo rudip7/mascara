@@ -1,6 +1,6 @@
 package de.tub.dima.mascara.optimizer.statistics;
 
-import de.tub.dima.mascara.dataMasking.InverseMaskingFunction;
+import de.tub.dima.mascara.dataMasking.DiscretizedAlphabet;
 import de.tub.dima.mascara.dataMasking.Alphabet;
 import de.tub.dima.mascara.dataMasking.AlphabetCatalog;
 
@@ -12,35 +12,30 @@ public class AttributeStatistics implements Cloneable{
     public long nDistinct;
     public String[] mostCommonVals;
     public Float[] mostCommonFreqs;
-    public final float restFreq;
+
+    public float restFreq;
     public String[] histogramBounds;
     public Map<String, Float> dist;
     public long size;
 
-    /**
-     * These attributes are only relevant for masked attributes.
-     */
-
-    public InverseMaskingFunction inverseMF;
     public Alphabet alphabet;
-    public int generalizationDegree;
-    public Map<String, Float> unmskDist;
-    public long unmskNDistinct;
-    public String[] unmskMostCommonVals;
-    public Float[] unmskMostCommonFreqs;
-    public String[] unmskHistogramBounds;
+
+    public boolean discretized = false;
 
     /**
      * Mascara will compute these statistics if an inverse masking function and an alphabet for this column exists
      */
-    public Long[] histApprxNDistinct;
-    public Float[] histApprxFreq;
+    public Long[] histApprxNDistinct = null;
+    public Float[] histApprxFreq = null;
+    public long[] histIdx;
 
 
 
     public AttributeStatistics(List<String> tableName, String attname, float nDistinct, String[] mostCommonVals, Float[] mostCommonFreqs, String[] histogramBounds, long size) {
         this.tableName = tableName;
         this.attname = attname;
+        this.alphabet = AlphabetCatalog.getInstance().getAlphabet(tableName, attname);
+
         this.nDistinct = (long) (nDistinct >= 0 ? nDistinct : -1* nDistinct *size);
         this.mostCommonVals = mostCommonVals;
         this.mostCommonFreqs = mostCommonFreqs;
@@ -52,79 +47,30 @@ public class AttributeStatistics implements Cloneable{
                 this.dist.put(mostCommonVals[i], mostCommonFreqs[i]);
             }
         }
-        this.restFreq = 1 - sumArray(this.mostCommonFreqs);
+        this.restFreq = 1.0f - sumArray(this.mostCommonFreqs);
+    }
+
+    AttributeStatistics(AttributeStatistics stats) {
+        this.tableName = stats.tableName;
+        this.attname = stats.attname;
         this.alphabet = AlphabetCatalog.getInstance().getAlphabet(tableName, attname);
-        this.generalizationDegree = -1;
-    }
 
+        this.nDistinct = stats.nDistinct;
+        this.mostCommonVals = stats.mostCommonVals;
+        this.mostCommonFreqs = stats.mostCommonFreqs;
+        this.histogramBounds = stats.histogramBounds;
+        this.size = stats.size;
+        this.dist = stats.dist;
 
-
-    public void unmaskStatistics(InverseMaskingFunction inverseMF){
-        if (this.inverseMF == null){
-            this.inverseMF = inverseMF;
-            if (alphabet == null){
-                alphabet = inverseMF.getAlphabet();
-            }
-
-            inverseDistribution(inverseMF);
-            inverseHistogramBounds(inverseMF);
-            estimateHistFreq(true);
-        }
-    }
-
-    private void inverseDistribution(InverseMaskingFunction inverseMF){
-        List<String> newVals = new ArrayList<>();
-        List<Float> newFreqs = new ArrayList<>();
-
-        for (String mskVal : dist.keySet()) {
-            List<String> unmskVals = inverseMF.eval(mskVal);
-            newVals.addAll(unmskVals);
-            float newFreq = dist.get(mskVal) / unmskVals.size();
-            for (String unmskVal : unmskVals) {
-                newFreqs.add(newFreq);
-            }
-        }
-
-        if (generalizationDegree < 1) {
-            generalizationDegree = newVals.size() / mostCommonVals.length;
-        }
-
-        unmskDist = new HashMap<>();
-        for (int i = 0; i < newVals.size(); i++) {
-            unmskDist.put(newVals.get(i), newFreqs.get(i));
-        }
-
-        unmskMostCommonVals = newVals.toArray(new String[0]);
-        unmskMostCommonFreqs = newFreqs.toArray(new Float[0]);
-
-        unmskNDistinct = nDistinct * generalizationDegree;
-    }
-
-    private void inverseHistogramBounds(InverseMaskingFunction inverseMF) {
-        if (histogramBounds == null){
-            return;
-        }
-        List<String> unmskBounds = new ArrayList<>();
-
-        for (String bound : histogramBounds) {
-            List<String> unmskVals = inverseMF.eval(bound);
-            unmskVals.sort(null);
-            if (unmskBounds.size() == 0){
-                unmskBounds.add(unmskVals.get(0));
-            } else {
-                unmskBounds.add(unmskVals.get(unmskVals.size() - 1));
-            }
-        }
-
-        unmskHistogramBounds = unmskBounds.toArray(new String[0]);
+        this.restFreq = stats.restFreq;
     }
 
     public int getBucketIdx(String val) {
-        if (alphabet != null){
+        if (computeHistIdx()){
             long idx = alphabet.indexOf(val);
-            if (alphabet.indexOf(histogramBounds[0]) <= idx){
-                for (int i = 1; i < histogramBounds.length; i++) {
-                    if (alphabet.indexOf(histogramBounds[0]) >= idx) {
+            if (histIdx[0] <= idx){
+                for (int i = 1; i < histIdx.length; i++) {
+                    if (histIdx[i] >= idx) {
                         return i - 1;
                     }
                 }
@@ -133,75 +79,77 @@ public class AttributeStatistics implements Cloneable{
         return -1;
     }
 
-    public int getUnmskBucketIdx(String val) {
-        if (alphabet != null) {
-            long idx = alphabet.indexOf(val);
-            if (alphabet.indexOf(histogramBounds[0]) <= idx){
-                for (int i = 1; i < unmskHistogramBounds.length; i++) {
-                    if (alphabet.indexOf(unmskHistogramBounds[0]) >= idx) {
-                        return i - 1;
-                    }
-                }
+    protected boolean computeHistIdx(){
+        if (alphabet == null || histogramBounds == null || histogramBounds.length < 1){
+            return false;
+        }
+        if (histIdx == null){
+            histIdx = new long[histogramBounds.length];
+            for (int i = 0; i < histogramBounds.length; i++) {
+                histIdx[i] = alphabet.indexOf(histogramBounds[i]);
             }
         }
-        return -1;
+        return true;
     }
+
+    public boolean isValueInHistogram(String value) {
+        if (computeHistIdx()){
+            long idx = alphabet.indexOf(value);
+            return idx >= histIdx[0] && idx <= histIdx[histIdx.length -1];
+        }
+        return false;
+    }
+
+
 
     public void estimateHistFreq(boolean masked) {
-        if (histogramBounds != null && alphabet != null && histApprxFreq == null){
-            String[] histogramBounds;
-            String[] mostCommonVals;
-            long remainingNDistinct;
-            float histBinFreq;
-
-            if (!masked) {
-                histogramBounds = this.histogramBounds;
-                mostCommonVals = this.mostCommonVals;
-                remainingNDistinct = this.mostCommonVals != null ? nDistinct - this.mostCommonVals.length : nDistinct;
-                histBinFreq = restFreq / (this.histogramBounds.length - 1);
-            } else {
-                histogramBounds = this.unmskHistogramBounds;
-                mostCommonVals = this.unmskMostCommonVals;
-                remainingNDistinct = this.unmskMostCommonVals != null ? unmskNDistinct - this.unmskMostCommonVals.length : unmskNDistinct;
-                histBinFreq = restFreq / (this.unmskHistogramBounds.length - 1);
+        if (histogramBounds != null && histApprxFreq == null){
+            if (this.alphabet == null){
+                this.alphabet = AlphabetCatalog.getInstance().getAlphabet(tableName, attname);
             }
+            if (alphabet != null){
+                String[] histogramBounds = this.histogramBounds;
+                String[] mostCommonVals = this.mostCommonVals;
+                long remainingNDistinct = this.mostCommonVals != null ? nDistinct - this.mostCommonVals.length : nDistinct;
+                float histBinFreq = restFreq / (this.histogramBounds.length - 1);
 
+                computeApproxFreq(histogramBounds, mostCommonVals, remainingNDistinct, histBinFreq);
 
-            long[] histNDistinct = new long[histogramBounds.length-1];
-            for (int i = 0; i < histogramBounds.length-1; i++) {
-                 histNDistinct[i] = alphabet.binNDistinct(histogramBounds[i], histogramBounds[i+1]);
             }
+        }
+    }
 
-            long totalNDistinctHist = alphabet.binNDistinct(histogramBounds[0], histogramBounds[histogramBounds.length-1]);
+    void computeApproxFreq(String[] histogramBounds, String[] mostCommonVals, long remainingNDistinct, float histBinFreq) {
+        long[] histNDistinct = new long[histogramBounds.length-1];
+        for (int i = 0; i < histogramBounds.length-1; i++) {
+            histNDistinct[i] = alphabet.binNDistinct(histogramBounds[i], histogramBounds[i+1]);
+        }
 
-            if (mostCommonVals != null){
-                for (String val : mostCommonVals) {
-                    int idx;
-                    if (!masked) {
-                        idx = getBucketIdx(val);
-                    } else {
-                        idx = getUnmskBucketIdx(val);
-                    }
-                    if (idx >= 0) {
-                        histNDistinct[idx] -= 1;
-                    }
+        long totalNDistinctHist = alphabet.binNDistinct(histogramBounds[0], histogramBounds[histogramBounds.length-1]);
+
+        if (mostCommonVals != null){
+            for (String val : mostCommonVals) {
+                int idx = getBucketIdx(val);
+
+                if (idx >= 0) {
+                    histNDistinct[idx] -= 1;
                 }
             }
+        }
 
-            float[] histRelNDistinct = new float[histNDistinct.length];
-            for (int i = 0; i < histNDistinct.length; i++) {
-                histRelNDistinct[i] = (float) histNDistinct[i] / totalNDistinctHist;
-            }
+        float[] histRelNDistinct = new float[histNDistinct.length];
+        for (int i = 0; i < histNDistinct.length; i++) {
+            histRelNDistinct[i] = (float) histNDistinct[i] / totalNDistinctHist;
+        }
 
-            histApprxNDistinct = new Long[histRelNDistinct.length];
-            for (int i = 0; i < histRelNDistinct.length; i++) {
-                histApprxNDistinct[i] = (long) (histRelNDistinct[i] * remainingNDistinct);
-            }
+        histApprxNDistinct = new Long[histRelNDistinct.length];
+        for (int i = 0; i < histRelNDistinct.length; i++) {
+            histApprxNDistinct[i] = (long) (histRelNDistinct[i] * remainingNDistinct);
+        }
 
-            histApprxFreq = new Float[histApprxNDistinct.length];
-            for (int i = 0; i < histApprxNDistinct.length; i++) {
-                histApprxFreq[i] = histBinFreq / histApprxNDistinct[i];
-            }
+        histApprxFreq = new Float[histApprxNDistinct.length];
+        for (int i = 0; i < histApprxNDistinct.length; i++) {
+            histApprxFreq[i] = histBinFreq / histApprxNDistinct[i];
         }
     }
 
@@ -216,27 +164,27 @@ public class AttributeStatistics implements Cloneable{
         return sum;
     }
 
+    @Deprecated
     public void adaptFreqSelectivity(float selectivity) {
         assert selectivity >= 0.0 && selectivity <= 1.0 : "The selectivity needs to be a value between 0.0 and 1.0";
-
-        if (unmskDist == null) {
-            for (Map.Entry<String, Float> entry : dist.entrySet()) {
-                dist.put(entry.getKey(), entry.getValue() * selectivity);
-            }
-            dist.put("NaN", 1.0f - selectivity);
-        } else {
-            for (Map.Entry<String, Float> entry : unmskDist.entrySet()) {
-                unmskDist.put(entry.getKey(), entry.getValue() * selectivity);
-            }
-            unmskDist.put("NaN", 1.0f - selectivity);
-        }
-
-        if (histApprxFreq != null) {
-            for (int i = 0; i < histApprxFreq.length; i++) {
-                histApprxFreq[i] *= selectivity;
-                // histApprxNDistinct[i] = histApprxFreq[i] * selectivity; // You might want to uncomment this line if needed
-            }
-        }
+//        if (unmskDist == null) {
+//            for (Map.Entry<String, Float> entry : dist.entrySet()) {
+//                dist.put(entry.getKey(), entry.getValue() * selectivity);
+//            }
+//            dist.put("NaN", 1.0f - selectivity);
+//        } else {
+//            for (Map.Entry<String, Float> entry : unmskDist.entrySet()) {
+//                unmskDist.put(entry.getKey(), entry.getValue() * selectivity);
+//            }
+//            unmskDist.put("NaN", 1.0f - selectivity);
+//        }
+//
+//        if (histApprxFreq != null) {
+//            for (int i = 0; i < histApprxFreq.length; i++) {
+//                histApprxFreq[i] *= selectivity;
+//                // histApprxNDistinct[i] = histApprxFreq[i] * selectivity; // You might want to uncomment this line if needed
+//            }
+//        }
     }
 
 
@@ -257,5 +205,107 @@ public class AttributeStatistics implements Cloneable{
             cloned.histApprxFreq = Arrays.copyOf(this.histApprxFreq, this.histApprxFreq.length);
         }
         return cloned;
+    }
+
+    public Float getFreq(String value){
+        Float freq = dist.get(value);
+        return freq != null ? freq : 0.0f;
+    }
+
+    public List<String> getTableName() {
+        return tableName;
+    }
+
+    public long getnDistinct() {
+        return nDistinct;
+    }
+
+    public String[] getMostCommonVals() {
+        return mostCommonVals;
+    }
+
+    public Float[] getMostCommonFreqs() {
+        return mostCommonFreqs;
+    }
+
+    public float getRestFreq() {
+        return restFreq;
+    }
+
+    public String[] getHistogramBounds() {
+        return histogramBounds;
+    }
+
+    public String getHistogramBound(int index) {
+        return index < histogramBounds.length && index >= 0 ? histogramBounds[index] : null;
+    }
+
+    public boolean hasHistogram(){
+        return histogramBounds != null && histogramBounds.length > 0;
+    }
+
+    public long[] getHistogramIdx() {
+        return histIdx;
+    }
+
+    public Long getHistogramIdx(int index) {
+        if (index == -1){
+            return histIdx != null ? histIdx[histIdx.length - 1] : null;
+        }
+        return histIdx != null && index < histIdx.length && index >= 0 ? histIdx[index] : null;
+    }
+
+//    public List<Integer> getRelevantBinsByIdx(Long lowBinBound, Long highBinBound){
+//        List<Integer> relevantBins = new ArrayList<>();
+//        for (int i = 0; i < histIdx.length; i++) {
+//
+//            if (histIdx[i])
+//        }
+//    }
+
+    public Map<String, Float> getDist() {
+        return dist;
+    }
+
+    public long getSize() {
+        return size;
+    }
+
+    public Alphabet getAlphabet() {
+        return alphabet;
+    }
+
+    public Long[] getHistApprxNDistinct() {
+        return histApprxNDistinct;
+    }
+
+    public Long getHistApprxNDistinct(int index) {
+        return index < histApprxNDistinct.length && index >= 0 ? histApprxNDistinct[index] : 1;
+    }
+
+    public void updateHistApprxNDistinct(Long value, int index){
+        if (index < histApprxNDistinct.length && index >= 0){
+            histApprxNDistinct[index] = value;
+        }
+    }
+
+    public void incrementHistApprxNDistinct(int index){
+        if (index < histApprxNDistinct.length && index >= 0){
+            histApprxNDistinct[index]++;
+        }
+    }
+
+    public Float[] getHistApprxFreq() {
+        return histApprxFreq;
+    }
+
+    public Float getHistApprxFreq(int index) {
+        return index < histApprxFreq.length && index >= 0 ? histApprxFreq[index] : 0.0f;
+    }
+
+    public void updateHistApprxFreq(Float value, int index){
+        if (index < histApprxFreq.length && index >= 0){
+            histApprxFreq[index] = value;
+        }
     }
 }

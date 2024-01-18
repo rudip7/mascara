@@ -35,11 +35,13 @@ public class AttributeMappings {
     public void update(Project project){
         List<AttributeMapping> newAttributeMappings = new ArrayList<>();
         List<Pair<RexNode, String>> namedProjects = project.getNamedProjects();
+        int newIdx = 0;
         for (int i = 0; i < namedProjects.size(); i++) {
             Pair<RexNode, String> namedProject = namedProjects.get(i);
             if (namedProject.left instanceof RexInputRef) {
-                AttributeMapping attributeMapping = getCompliantAttribute(i);
-                newAttributeMappings.add(attributeMapping.project(i, i, namedProject.right));
+                AttributeMapping attributeMapping = getCompliantAttribute((RexInputRef) namedProject.left);
+                newAttributeMappings.add(attributeMapping.project(i, newIdx, namedProject.right));
+                newIdx++;
             } else {
                 throw new RuntimeException("Queries with generalized projection are not supported yet.");
             }

@@ -1,0 +1,20 @@
+{
+  "public": {
+    "Patient": {
+      "age": "integerAlphabet",
+      "height": "integerAlphabet",
+      "weight": "integerAlphabet",
+      "diagnosis": "diagnosisAlphabet",
+      "zip": "zipAlphabet",
+      "phone": "phoneAlphabet"
+    },
+    "Masked_low": {
+      "age": "integerAlphabet",
+      "height": "integerAlphabet",
+      "weight": "integerAlphabet",
+      "diagnosis": "diagnosisAlphabet",
+      "zip": "zipAlphabet",
+      "phone": "phoneAlphabet"
+    }
+  }
+}
