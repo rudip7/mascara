@@ -126,8 +126,15 @@ public class MaskedAttributeStatistics extends AttributeStatistics{
 
     @Override
     public Float getFreq(String value){
-        Float freq = unmskDist.get(value);
-        return freq != null ? freq : 0.0f;
+        if (unmskDist != null){
+            Float freq = unmskDist.get(value);
+            return freq != null ? freq : 0.0f;
+        } else if (dist != null) {
+            Float freq = dist.get(value);
+            return freq != null ? freq : 0.0f;
+        } else {
+            return 0.0f;
+        }
     }
 
     @Override
@@ -147,7 +154,11 @@ public class MaskedAttributeStatistics extends AttributeStatistics{
 
     @Override
     public Map<String, Float> getDist() {
-        return unmskDist;
+        if (unmskDist != null){
+            return unmskDist;
+        } else {
+            return dist;
+        }
     }
 
     public InverseMaskingFunction getInverseMF() {

@@ -23,12 +23,14 @@ public class MaskingFunctionsCatalog {
         this.maskingFunctions.add(new Bucketize());
         this.maskingFunctions.add(new BucketizeLow());
         this.maskingFunctions.add(new AddRelativeNoise());
+        this.maskingFunctions.add(new AddAbsoluteNoise());
+        this.maskingFunctions.add(new Round());
 
 
         this.inverseMaskingFunctions = new ArrayList<>();
         for (MaskingFunction maskingFunction : this.maskingFunctions) {
-            if (maskingFunction.getInverseMaskingFunction() != null){
-                this.inverseMaskingFunctions.add(maskingFunction.getInverseMaskingFunction());
+            if (maskingFunction instanceof Generalization && ((Generalization) maskingFunction).getInverseMaskingFunction() != null){
+                this.inverseMaskingFunctions.add(((Generalization) maskingFunction).getInverseMaskingFunction());
             }
         }
     }

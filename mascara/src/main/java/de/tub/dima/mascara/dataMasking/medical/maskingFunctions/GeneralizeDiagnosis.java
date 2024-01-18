@@ -1,9 +1,10 @@
 package de.tub.dima.mascara.dataMasking.medical.maskingFunctions;
 
+import de.tub.dima.mascara.dataMasking.Generalization;
 import de.tub.dima.mascara.dataMasking.MaskingFunction;
 import de.tub.dima.mascara.dataMasking.medical.inverseFunctions.InverseGeneralizeDiagnosis;
 
-public class GeneralizeDiagnosis extends MaskingFunction {
+public class GeneralizeDiagnosis extends Generalization {
     public GeneralizeDiagnosis() {
         this.name = "GENERALIZE_DIAGNOSIS";
         this.inverseMaskingFunction = new InverseGeneralizeDiagnosis();

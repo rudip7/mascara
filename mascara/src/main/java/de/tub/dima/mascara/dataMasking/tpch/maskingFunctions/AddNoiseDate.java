@@ -1,13 +1,14 @@
 package de.tub.dima.mascara.dataMasking.tpch.maskingFunctions;
 
 import de.tub.dima.mascara.dataMasking.MaskingFunction;
+import de.tub.dima.mascara.dataMasking.Perturbation;
 
 import java.sql.Date;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class AddNoiseDate extends MaskingFunction {
+public class AddNoiseDate extends Perturbation {
     public AddNoiseDate() {
         this.name = "ADD_NOISE_DATE";
     }

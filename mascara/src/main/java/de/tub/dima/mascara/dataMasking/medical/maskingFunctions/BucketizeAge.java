@@ -1,9 +1,10 @@
 package de.tub.dima.mascara.dataMasking.medical.maskingFunctions;
 
+import de.tub.dima.mascara.dataMasking.Generalization;
 import de.tub.dima.mascara.dataMasking.MaskingFunction;
 import de.tub.dima.mascara.dataMasking.medical.inverseFunctions.InverseBucketizeAge;
 
-public class BucketizeAge extends MaskingFunction {
+public class BucketizeAge extends Generalization {
 
     public BucketizeAge() {
         this.name = "BUCKETIZE_AGE";

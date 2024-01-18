@@ -33,12 +33,14 @@ public class AttributeMappings {
     }
 
     public void update(Project project){
+        // TODO: Consider missing attributes as suppressed
         List<AttributeMapping> newAttributeMappings = new ArrayList<>();
         List<Pair<RexNode, String>> namedProjects = project.getNamedProjects();
         int newIdx = 0;
         for (int i = 0; i < namedProjects.size(); i++) {
             Pair<RexNode, String> namedProject = namedProjects.get(i);
             if (namedProject.left instanceof RexInputRef) {
+                // getCompliantAttribute returns null if the attribute is not available, we should consider this in the future
                 AttributeMapping attributeMapping = getCompliantAttribute((RexInputRef) namedProject.left);
                 newAttributeMappings.add(attributeMapping.project(i, newIdx, namedProject.right));
                 newIdx++;

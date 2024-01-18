@@ -1,12 +1,12 @@
 package de.tub.dima.mascara.dataMasking.medical.maskingFunctions;
 
 import de.tub.dima.mascara.dataMasking.MaskingFunction;
+import de.tub.dima.mascara.dataMasking.Perturbation;
 
 import java.util.Random;
 
-public class AddRelativeNoise extends MaskingFunction {
+public class AddRelativeNoise extends Perturbation {
     public AddRelativeNoise() {
-        this.aggregable = true;
         this.name = "ADD_RELATIVE_NOISE";
     }
 

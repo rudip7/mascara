@@ -35,11 +35,13 @@ public class AlphabetCatalog {
         IntegerAlphabet integerAlphabet = new IntegerAlphabet();
         IntegerAlphabet discretizedIntegerAlphabet = new IntegerAlphabet(true);
         FloatAlphabet floatAlphabet = new FloatAlphabet();
+//        FloatAlphabet floatAlphabet = new FloatAlphabet();
 
         this.alphabets = new HashMap<>();
         this.alphabets.put("dateAlphabet", dateAlphabet);
         this.alphabets.put("integerAlphabet", integerAlphabet);
         this.alphabets.put("discretizedIntegerAlphabet", discretizedIntegerAlphabet);
+        this.alphabets.put("floatAlphabet", floatAlphabet);
         this.alphabets.put("floatAlphabet", floatAlphabet);
 
         fromJSON("src/main/resources/alphabets/tpch.json");

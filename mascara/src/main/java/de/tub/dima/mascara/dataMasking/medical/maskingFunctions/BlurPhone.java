@@ -1,9 +1,10 @@
 package de.tub.dima.mascara.dataMasking.medical.maskingFunctions;
 
+import de.tub.dima.mascara.dataMasking.Generalization;
 import de.tub.dima.mascara.dataMasking.MaskingFunction;
 import de.tub.dima.mascara.dataMasking.medical.inverseFunctions.InverseBlurPhone;
 
-public class BlurPhone extends MaskingFunction {
+public class BlurPhone extends Generalization {
 
     public BlurPhone() {
         this.name = "BLUR_PHONE";

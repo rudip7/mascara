@@ -109,9 +109,9 @@ public class AccessControlPolicy {
                 }
                 RexInputRef newRef = new RexInputRef(i, attr.getType());
                 MaskingFunction maskingFunction = maskingFunctionsCatalog.getMaskingFunctionByName(maskedAttribute.getOperator().getName());
-                if (maskingFunction.hasParametrizedInverse()){
+                if (maskingFunction instanceof Generalization && ((Generalization) maskingFunction).hasParametrizedInverse()){
                     maskingFunction = maskingFunction.clone();
-                    maskingFunction.setInverseMaskingFunction(parameters);
+                    ((Generalization) maskingFunction).setInverseMaskingFunction(parameters);
                 }
                 this.policyStats.indexAttribute(newRef.getIndex(), namedAttr.right);
 
@@ -119,8 +119,12 @@ public class AccessControlPolicy {
                 AttributeStatistics attributeStatistics = this.policyStats.getAttributeStatistics(newRef.getIndex());
                 Alphabet alphabet = AlphabetCatalog.getInstance().getAlphabet(this.protectedTableName, namedAttr.right);
                 if (alphabet != null && alphabet instanceof DiscretizedAlphabet && ((DiscretizedAlphabet) alphabet).shouldDiscretize()){
-                    this.policyStats.setAttributeStatistics(newRef.getIndex(), new DiscretizedMaskedAttributeStatistics(attributeStatistics));
-                } else {
+                    if (maskingFunction instanceof Generalization) {
+                        this.policyStats.setAttributeStatistics(newRef.getIndex(), new DiscretizedMaskedAttributeStatistics(attributeStatistics));
+                    } else {
+                        this.policyStats.setAttributeStatistics(newRef.getIndex(), new DiscretizedAttributeStatistics(attributeStatistics));
+                    }
+                } else if (maskingFunction instanceof Generalization){
                     this.policyStats.setAttributeStatistics(newRef.getIndex(), new MaskedAttributeStatistics(attributeStatistics));
                 }
 

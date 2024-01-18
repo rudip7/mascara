@@ -1,5 +1,7 @@
 package de.tub.dima.mascara.modifier;
 
+import de.tub.dima.mascara.dataMasking.Generalization;
+import de.tub.dima.mascara.dataMasking.Suppression;
 import de.tub.dima.mascara.optimizer.iqMetadata.IQMetadata;
 import de.tub.dima.mascara.policies.AccessControlPolicy;
 import de.tub.dima.mascara.policies.AttributeMapping;
@@ -268,11 +270,11 @@ public class CompliantPlanner extends RelVisitor {
 
             AttributeMapping compliantAttribute = this.attributeMappings.getCompliantAttribute(inputRef);
 
-            if (compliantAttribute == null){
+            if (compliantAttribute == null || (compliantAttribute.isMasked() && compliantAttribute.getMaskingFunction() instanceof Suppression)){
                 // Attribute is suppressed
                 return null;
-            } else if (!compliantAttribute.isMasked()) {
-                // Attribute is available
+            } else if (!compliantAttribute.isMasked() || !(compliantAttribute.getMaskingFunction() instanceof Generalization)) {
+                // Attribute is available or masking function is a perturbation (no schema changes)
                 // No modification is needed
                 if (literalIsLeft) {
                     return builder.call(condition.getOperator(), literal, compliantAttribute.newRef);

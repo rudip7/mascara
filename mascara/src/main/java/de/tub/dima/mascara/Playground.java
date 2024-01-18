@@ -33,7 +33,7 @@ public class Playground {
 
         MascaraMaster mascara = new MascaraMaster(connectionProperties);
 
-        String queryString = readFile("src/main/resources/queries/tpch/3_no_agg.sql");
+        String queryString = readFile("src/main/resources/queries/tpch/l_select.sql");
 
         System.out.println("[Requested Query]:\n");
         System.out.println(queryString);

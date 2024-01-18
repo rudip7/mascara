@@ -1,5 +1,6 @@
 package de.tub.dima.mascara.dataMasking.tpch.maskingFunctions;
 
+import de.tub.dima.mascara.dataMasking.Generalization;
 import de.tub.dima.mascara.dataMasking.MaskingFunction;
 import de.tub.dima.mascara.dataMasking.tpch.inverseFunctions.InverseBucketize;
 import de.tub.dima.mascara.dataMasking.tpch.inverseFunctions.InverseBucketizeLow;
@@ -8,7 +9,7 @@ import org.apache.calcite.util.NlsString;
 
 import java.util.List;
 
-public class BucketizeLow extends MaskingFunction {
+public class BucketizeLow extends Generalization {
 
     public BucketizeLow() {
         this.name = "BUCKETIZE_LOW";
@@ -19,9 +20,8 @@ public class BucketizeLow extends MaskingFunction {
     @Override
     public void setInverseMaskingFunction(List<Object> parameters) {
         if (parameters.size() == 1){
-            Double bSize;
-            Object param = parameters.get(0);
-            this.inverseMaskingFunction = new InverseGeneralizeDate((String) parameters.get(0));
+            Double bSize = Double.parseDouble((String) parameters.get(0));
+            this.inverseMaskingFunction = new InverseBucketize(bSize);
         }
     }
 

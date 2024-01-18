@@ -1,5 +1,6 @@
 package de.tub.dima.mascara.dataMasking.tpch.maskingFunctions;
 
+import de.tub.dima.mascara.dataMasking.Generalization;
 import de.tub.dima.mascara.dataMasking.MaskingFunction;
 import de.tub.dima.mascara.dataMasking.tpch.inverseFunctions.InverseGeneralizeDate;
 import org.apache.calcite.util.NlsString;
@@ -11,7 +12,7 @@ import java.time.YearMonth;
 import java.time.temporal.Temporal;
 import java.util.List;
 
-public class GeneralizeDate extends MaskingFunction {
+public class GeneralizeDate extends Generalization {
     public GeneralizeDate() {
         this.aggregable = true;
         this.name = "GENERALIZE_DATE";

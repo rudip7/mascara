@@ -17,7 +17,7 @@ public class DiscretizedAttributeStatistics extends AttributeStatistics implemen
         discretizeStatistics();
     }
 
-    DiscretizedAttributeStatistics(AttributeStatistics stats) {
+    public DiscretizedAttributeStatistics(AttributeStatistics stats) {
         super(stats);
         assert this.alphabet != null && this.alphabet instanceof DiscretizedAlphabet && ((DiscretizedAlphabet) this.alphabet).shouldDiscretize();
         discretizeStatistics();

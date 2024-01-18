@@ -1,10 +1,11 @@
 package de.tub.dima.mascara.dataMasking.tpch.maskingFunctions;
 
+import de.tub.dima.mascara.dataMasking.Generalization;
 import de.tub.dima.mascara.dataMasking.MaskingFunction;
 
 import java.time.LocalDate;
 
-public class BlurDate extends MaskingFunction {
+public class BlurDate extends Generalization {
     public BlurDate() {
         this.name = "BLUR_DATE";
     }

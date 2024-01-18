@@ -1,9 +1,10 @@
 package de.tub.dima.mascara.dataMasking.medical.maskingFunctions;
 
+import de.tub.dima.mascara.dataMasking.Generalization;
 import de.tub.dima.mascara.dataMasking.MaskingFunction;
 import de.tub.dima.mascara.dataMasking.medical.inverseFunctions.InverseBlurZip;
 
-public class BlurZip extends MaskingFunction {
+public class BlurZip extends Generalization {
 
     public BlurZip() {
         this.name = "BLUR_ZIP";

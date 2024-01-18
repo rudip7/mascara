@@ -1,7 +1,10 @@
 {
   "public": {
     "lineitem": {
-      "l_extendedprice" : "discretizedIntegerAlphabet"
+      "l_extendedprice" : "discretizedIntegerAlphabet",
+      "l_shipdate" : "dateAlphabet",
+      "l_commitdate" : "dateAlphabet",
+      "l_receiptdate" : "dateAlphabet"
     },
     "orders": {
       "o_orderdate" : "dateAlphabet"
