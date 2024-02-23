@@ -21,12 +21,16 @@ public class PoliciesCatalog {
 
         String schemaName = "public";
         List<String> policyNames = Arrays.asList(
-//                "c_p1",
+                "c_p1",
+                "c_p2",
                 "l_p1",
                 "l_p2",
-                "l_p3"
-//                "o_p1",
-//                "o_p2"
+                "l_p3",
+                "o_p1",
+                "o_p2",
+                "n",
+                "s",
+                "r"
                 );
 
         for (int i = 0; i < policyNames.size(); i++) {

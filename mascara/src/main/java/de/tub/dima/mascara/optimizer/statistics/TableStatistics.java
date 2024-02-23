@@ -22,6 +22,10 @@ public class TableStatistics {
         this.size = size;
     }
 
+    public void addPrecomputedStatistics(String attname, Double relativeEntropy){
+        this.attributeStatistics.put(attname, new PrecomputedStatistics(tableName, attname, relativeEntropy));
+    }
+
     public void addAttributeStatistics(String attname, float n_distinct, String[] most_common_vals, Float[] most_common_freqs, String[] histogram_bounds){
         addAttributeStatistics(attname, n_distinct, most_common_vals, most_common_freqs, histogram_bounds,false);
     }

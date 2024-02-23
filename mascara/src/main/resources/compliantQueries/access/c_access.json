@@ -1,0 +1,10 @@
+{
+  "query" : "SELECT c_custkey, c_nationkey, c_phone, c_acctbal, c_mktsegment, c_comment\nFROM customer",
+  "compliantQueries" : [ {
+    "id" : "c_p2",
+    "compliantQuery" : "SELECT c_custkey, c_nationkey, c_phone, c_acctbal, c_mktsegment, c_comment\r\nFROM public.c_p2"
+  }, {
+    "id" : "c_p1",
+    "compliantQuery" : "SELECT c_custkey, c_nationkey, c_phone, c_acctbal, c_mktsegment, c_comment\r\nFROM public.c_p1"
+  } ]
+}

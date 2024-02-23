@@ -65,6 +65,11 @@ public class AttributeMapping {
     public boolean isMasked() {
         return masked;
     }
+
+    public boolean dataTypeChanged() {
+        return masked && (maskingFunction != null && maskingFunction instanceof Generalization);
+    }
+
     public RexCall maskValue(RexNode literal, RelBuilder builder){
         if (!masked){
             return null;
@@ -100,9 +105,9 @@ public class AttributeMapping {
         RexInputRef newRef = new RexInputRef(newIdx, this.getType());
         return new AttributeMapping(this.originalAttribute, originalRef, this.compliantAttribute, newRef, name, this.masked, this.maskedRexCall, this.maskingFunction);
     }
-    public AttributeMapping increaseIdx(int idxIncrease){
-        RexInputRef originalRef = new RexInputRef(this.originalRef.getIndex() + idxIncrease, this.originalRef.getType());
-        RexInputRef newRef = new RexInputRef(this.newRef.getIndex() + idxIncrease, this.getType());
+    public AttributeMapping increaseIdx(int originalIdxIncrease, int newIdxIncrease){
+        RexInputRef originalRef = new RexInputRef(this.originalRef.getIndex() + originalIdxIncrease, this.originalRef.getType());
+        RexInputRef newRef = new RexInputRef(this.newRef.getIndex() + newIdxIncrease, this.getType());
         return new AttributeMapping(this.originalAttribute, originalRef, this.compliantAttribute, newRef, this.name, this.masked, this.maskedRexCall, this.maskingFunction);
     }
     public boolean isAggregable(){
@@ -127,7 +132,7 @@ public class AttributeMapping {
     }
 
     public AttributeStatistics getCompliantStats() {
-        return compliantAttribute.getStats();
+        return compliantAttribute == null ? null : compliantAttribute.getStats();
     }
 
     public MaskingFunction getMaskingFunction() {

@@ -66,6 +66,8 @@ public class AccessControlPolicy {
 
         this.protectedTable = scan.getTable();
         this.protectedTableName = scan.getTable().getQualifiedName();
+        attributeMappings.setMaxOriginalRef(protectedTable.getRowType().getFieldCount() - 1);
+
         setStatistics();
         indexStats();
         createAttributesMapping(project, maskingFunctionsCatalog);
@@ -117,15 +119,19 @@ public class AccessControlPolicy {
 
                 // Change statistics to masked statistics
                 AttributeStatistics attributeStatistics = this.policyStats.getAttributeStatistics(newRef.getIndex());
-                Alphabet alphabet = AlphabetCatalog.getInstance().getAlphabet(this.protectedTableName, namedAttr.right);
-                if (alphabet != null && alphabet instanceof DiscretizedAlphabet && ((DiscretizedAlphabet) alphabet).shouldDiscretize()){
-                    if (maskingFunction instanceof Generalization) {
-                        this.policyStats.setAttributeStatistics(newRef.getIndex(), new DiscretizedMaskedAttributeStatistics(attributeStatistics));
-                    } else {
-                        this.policyStats.setAttributeStatistics(newRef.getIndex(), new DiscretizedAttributeStatistics(attributeStatistics));
+                if (!(attributeStatistics instanceof PrecomputedStatistics)){
+                    Alphabet alphabet = AlphabetCatalog.getInstance().getAlphabet(this.protectedTableName, namedAttr.right);
+                    if (maskingFunction instanceof Suppression){
+                        this.policyStats.setAttributeStatistics(newRef.getIndex(), new SuppressedAttributeStatistics(attributeStatistics));
+                    } else if (alphabet != null && alphabet instanceof DiscretizedAlphabet && ((DiscretizedAlphabet) alphabet).shouldDiscretize()){
+                        if (maskingFunction instanceof Generalization) {
+                            this.policyStats.setAttributeStatistics(newRef.getIndex(), new DiscretizedMaskedAttributeStatistics(attributeStatistics));
+                        } else {
+                            this.policyStats.setAttributeStatistics(newRef.getIndex(), new DiscretizedAttributeStatistics(attributeStatistics));
+                        }
+                    } else if (maskingFunction instanceof Generalization){
+                        this.policyStats.setAttributeStatistics(newRef.getIndex(), new MaskedAttributeStatistics(attributeStatistics));
                     }
-                } else if (maskingFunction instanceof Generalization){
-                    this.policyStats.setAttributeStatistics(newRef.getIndex(), new MaskedAttributeStatistics(attributeStatistics));
                 }
 
 

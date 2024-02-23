@@ -3,6 +3,9 @@ package de.tub.dima.mascara.dataMasking.medical.alphabets;
 import de.tub.dima.mascara.dataMasking.Alphabet;
 import de.tub.dima.mascara.dataMasking.DiscretizedAlphabet;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class IntegerAlphabet extends DiscretizedAlphabet {
 
     public long lowerBound;
@@ -53,5 +56,16 @@ public class IntegerAlphabet extends DiscretizedAlphabet {
         } catch (NumberFormatException e){
             return false;
         }
+    }
+
+    @Override
+    public Map<String, Long> getAlphabet() {
+        if (alphabet == null){
+            alphabet = new HashMap<>();
+            for (long i = lowerBound; i <= upperBound; i++) {
+                alphabet.put(String.valueOf(i), i - lowerBound);
+            }
+        }
+        return alphabet;
     }
 }

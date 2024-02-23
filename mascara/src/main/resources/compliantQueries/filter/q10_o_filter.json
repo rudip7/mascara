@@ -1,0 +1,10 @@
+{
+  "query" : "select o_orderkey, o_custkey, o_orderdate, o_orderpriority, o_shippriority, o_comment\nfrom orders\nwhere o_orderdate >= date '1993-10-01'\n  AND o_orderdate < date '1994-01-01'\n",
+  "compliantQueries" : [ {
+    "id" : "o_p2",
+    "compliantQuery" : "SELECT *\r\nFROM public.o_p2\r\nWHERE o_orderdate >= generalize_date(DATE '1993-10-01', 'MONTH') AND o_orderdate < generalize_date(DATE '1994-01-01', 'MONTH')"
+  }, {
+    "id" : "o_p1",
+    "compliantQuery" : "SELECT *\r\nFROM public.o_p1\r\nWHERE o_orderdate >= DATE '1993-10-01' AND o_orderdate < DATE '1994-01-01'"
+  } ]
+}

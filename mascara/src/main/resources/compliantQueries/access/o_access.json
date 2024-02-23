@@ -1,0 +1,10 @@
+{
+  "query" : "select o_orderkey, o_custkey, o_orderdate, o_orderpriority, o_shippriority, o_comment\nfrom orders",
+  "compliantQueries" : [ {
+    "id" : "o_p2",
+    "compliantQuery" : "SELECT *\r\nFROM public.o_p2"
+  }, {
+    "id" : "o_p1",
+    "compliantQuery" : "SELECT *\r\nFROM public.o_p1"
+  } ]
+}

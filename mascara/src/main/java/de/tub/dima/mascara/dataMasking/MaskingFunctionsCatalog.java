@@ -3,6 +3,7 @@ package de.tub.dima.mascara.dataMasking;
 import de.tub.dima.mascara.dataMasking.medical.maskingFunctions.*;
 import de.tub.dima.mascara.dataMasking.tpch.maskingFunctions.*;
 import de.tub.dima.mascara.dataMasking.tpch.maskingFunctions.AddRelativeNoise;
+import de.tub.dima.mascara.dataMasking.tpch.maskingFunctions.BlurPhone;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.impl.ScalarFunctionImpl;
 
@@ -25,6 +26,8 @@ public class MaskingFunctionsCatalog {
         this.maskingFunctions.add(new AddRelativeNoise());
         this.maskingFunctions.add(new AddAbsoluteNoise());
         this.maskingFunctions.add(new Round());
+        this.maskingFunctions.add(new BlurPhone());
+        this.maskingFunctions.add(new AddLaplaceNoise());
 
 
         this.inverseMaskingFunctions = new ArrayList<>();

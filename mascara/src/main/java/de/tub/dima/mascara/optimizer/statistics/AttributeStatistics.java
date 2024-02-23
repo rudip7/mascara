@@ -29,6 +29,8 @@ public class AttributeStatistics implements Cloneable{
     public Float[] histApprxFreq = null;
     public long[] histIdx;
 
+    public double relativeEntropy = -1.0;
+
 
 
     public AttributeStatistics(List<String> tableName, String attname, float nDistinct, String[] mostCommonVals, Float[] mostCommonFreqs, String[] histogramBounds, long size) {
@@ -307,5 +309,13 @@ public class AttributeStatistics implements Cloneable{
         if (index < histApprxFreq.length && index >= 0){
             histApprxFreq[index] = value;
         }
+    }
+
+    public double getRelativeEntropy() {
+        return relativeEntropy;
+    }
+
+    public void setRelativeEntropy(double relativeEntropy) {
+        this.relativeEntropy = relativeEntropy;
     }
 }

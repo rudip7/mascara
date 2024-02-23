@@ -1,0 +1,16 @@
+{
+  "query" : "select c_custkey, c_acctbal, c_phone, c_comment\nFROM customer, orders\nWHERE c_custkey = o_custkey\n    AND o_orderdate >= date '1993-10-01'\n    AND o_orderdate < date '1994-01-01'",
+  "compliantQueries" : [ {
+    "id" : "c_p2-o_p1",
+    "compliantQuery" : "SELECT c_p2.c_custkey, c_p2.c_acctbal, c_p2.c_phone, c_p2.c_comment\r\nFROM public.c_p2,\r\npublic.o_p1\r\nWHERE c_p2.c_custkey = o_p1.o_custkey AND (o_p1.o_orderdate >= DATE '1993-10-01' AND o_p1.o_orderdate < DATE '1994-01-01')"
+  }, {
+    "id" : "c_p1-o_p1",
+    "compliantQuery" : "SELECT c_p1.c_custkey, c_p1.c_acctbal, c_p1.c_phone, c_p1.c_comment\r\nFROM public.c_p1,\r\npublic.o_p1\r\nWHERE c_p1.c_custkey = o_p1.o_custkey AND (o_p1.o_orderdate >= DATE '1993-10-01' AND o_p1.o_orderdate < DATE '1994-01-01')"
+  }, {
+    "id" : "c_p2-o_p2",
+    "compliantQuery" : "SELECT c_p2.c_custkey, c_p2.c_acctbal, c_p2.c_phone, c_p2.c_comment\r\nFROM public.c_p2,\r\npublic.o_p2\r\nWHERE c_p2.c_custkey = o_p2.o_custkey AND o_p2.o_orderdate >= generalize_date(DATE '1993-10-01', 'MONTH') AND o_p2.o_orderdate < generalize_date(DATE '1994-01-01', 'MONTH')"
+  }, {
+    "id" : "c_p1-o_p2",
+    "compliantQuery" : "SELECT c_p1.c_custkey, c_p1.c_acctbal, c_p1.c_phone, c_p1.c_comment\r\nFROM public.c_p1,\r\npublic.o_p2\r\nWHERE c_p1.c_custkey = o_p2.o_custkey AND o_p2.o_orderdate >= generalize_date(DATE '1993-10-01', 'MONTH') AND o_p2.o_orderdate < generalize_date(DATE '1994-01-01', 'MONTH')"
+  } ]
+}

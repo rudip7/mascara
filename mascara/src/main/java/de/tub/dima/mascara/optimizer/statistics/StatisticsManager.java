@@ -1,16 +1,22 @@
 package de.tub.dima.mascara.optimizer.statistics;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.tub.dima.mascara.DbConnector;
+import net.minidev.json.parser.JSONParser;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class StatisticsManager {
     public Map<List<String>, TableStatistics> statisticsCatalog;
     public Map<List<String>, Long> tableSizes;
     public DbConnector connector;
+
+    public Map<List<String>, Map<String, Double>> relativeEntropies;
 
     private static StatisticsManager instance;
 
@@ -21,6 +27,8 @@ public class StatisticsManager {
     private StatisticsManager() {
         this.statisticsCatalog = new HashMap<>();
         this.tableSizes = new HashMap<>();
+
+//        fromJSON("src/main/resources/relativeEntropies/tpch.json");
     }
 
     public static StatisticsManager getInstance() {
@@ -38,12 +46,58 @@ public class StatisticsManager {
         } else {
             try {
                 Long tableSize = getTableSize(tableName);
+                if (relativeEntropies != null){
+                    Map<String, Double> precomputedStats = relativeEntropies.get(tableName);
+                    if (precomputedStats != null){
+                        tableStatistics = new TableStatistics(tableName, tableSize);
+                        List<String> attributeNames = connector.getAttributeNames(tableName);
+                        for (String attname : attributeNames){
+                            tableStatistics.addPrecomputedStatistics(attname, precomputedStats.get(attname));
+                        }
+                        statisticsCatalog.put(tableName, tableStatistics);
+                        return tableStatistics;
+                    }
+                }
                 TableStatistics statistics = connector.getStatistics(tableName, tableSize);
                 statisticsCatalog.put(tableName, statistics);
                 return statistics;
             } catch (SQLException e) {
                 return null;
             }
+        }
+    }
+
+    public void fromJSON(String jsonFilePath){
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            // Load the JSON file from the resources folder
+            InputStream inputStream = JSONParser.class.getClassLoader().getResourceAsStream("relativeEntropies/tpch.json");
+            JsonNode rootNode = objectMapper.readTree(inputStream);
+
+            relativeEntropies = new HashMap<>();
+            parseJSON(rootNode, new ArrayList<>(), relativeEntropies);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void parseJSON(JsonNode node, List<String> currentPath, Map<List<String>, Map<String, Double>> resultMap) {
+        for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {
+            Map.Entry<String, JsonNode> entry = it.next();
+            String key = entry.getKey();
+            JsonNode value = entry.getValue();
+            currentPath.add(key);
+
+            if (value.isObject()) {
+                parseJSON(value, new ArrayList<>(currentPath), resultMap);
+            } else if (value.isTextual()) {
+                List<String> tableName = new ArrayList<>(currentPath.subList(0, 2));
+                Map<String, Double> attributes = resultMap.computeIfAbsent(tableName, k -> new HashMap<>());
+                attributes.put(currentPath.get(2), Double.valueOf(value.asText()));
+            }
+
+            currentPath.remove(currentPath.size() - 1);
         }
     }
 

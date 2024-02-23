@@ -1,0 +1,13 @@
+{
+  "query" : "select l_orderkey, l_suppkey, l_quantity, l_extendedprice,  l_discount, l_tax, l_returnflag, l_linestatus, l_shipdate, l_commitdate, l_receiptdate, l_shipmode\nfrom lineitem\nwhere l_shipdate > date '1995-03-15'",
+  "compliantQueries" : [ {
+    "id" : "l_p3",
+    "compliantQuery" : "SELECT l_orderkey, l_suppkey, l_quantity, l_extendedprice, l_discount, l_tax, l_returnflag, l_linestatus, l_shipdate, l_commitdate, l_receiptdate, l_shipmode\r\nFROM public.l_p3\r\nWHERE l_shipdate > generalize_date(DATE '1995-03-15', 'MONTH')"
+  }, {
+    "id" : "l_p2",
+    "compliantQuery" : "SELECT *\r\nFROM public.l_p2\r\nWHERE l_shipdate > DATE '1995-03-15'"
+  }, {
+    "id" : "l_p1",
+    "compliantQuery" : "SELECT l_orderkey, l_suppkey, l_quantity, l_extendedprice, l_discount, l_tax, l_returnflag, l_linestatus, l_shipdate, l_commitdate, l_receiptdate, l_shipmode\r\nFROM public.l_p1\r\nWHERE l_shipdate > DATE '1995-03-15'"
+  } ]
+}

@@ -9,7 +9,7 @@ public class DiagnosisAlphabet extends Alphabet {
         this.alphabet = new HashMap<>();
         String letters = "ABCDEFGHIJKLMNOPQRSTVYZ";
 
-        int idx = 0;
+        long idx = 0;
         for (char letter : letters.toCharArray()) {
             for (double number = 0.0; number < 100.0; number += 0.1) {
                 double truncatedNumber = Math.floor(number * 10) / 10;

@@ -5,7 +5,7 @@ import de.tub.dima.mascara.dataMasking.Alphabet;
 import java.util.HashMap;
 
 public class ZipAlphabet extends Alphabet {
-    private int idx = 0;
+    private long idx = 0;
     public ZipAlphabet() {
 
         this.alphabet = new HashMap<>();

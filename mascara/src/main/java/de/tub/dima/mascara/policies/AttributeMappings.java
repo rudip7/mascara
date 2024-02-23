@@ -1,6 +1,7 @@
 package de.tub.dima.mascara.policies;
 
 import de.tub.dima.mascara.optimizer.iqMetadata.AttributeMetadata;
+import de.tub.dima.mascara.optimizer.statistics.AttributeStatistics;
 import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.AggregateCall;
 import org.apache.calcite.rel.core.Project;
@@ -17,8 +18,13 @@ public class AttributeMappings {
 
     private List<AttributeMapping> mappings;
 
+    public List<AttributeMapping> filterMappings;
+
+    public int maxOriginalRef;
+
     public AttributeMappings() {
         this.mappings = new ArrayList<>();
+        this.filterMappings = new ArrayList<>();
     }
 
     public AttributeMappings(TableScan scan) {
@@ -30,6 +36,7 @@ public class AttributeMappings {
             AttributeMetadata attributeMetadata = new AttributeMetadata(scan.getTable().getQualifiedName(), i, fieldList.get(i).getName());
             this.mappings.add(new AttributeMapping(attributeMetadata, inputRef, fieldNames.get(i)));
         }
+        this.maxOriginalRef = fieldList.size()-1;
     }
 
     public void update(Project project){
@@ -81,6 +88,10 @@ public class AttributeMappings {
         return this.mappings.add(mapping);
     }
 
+    public boolean addFilterMapping(AttributeMapping mapping){
+        return this.filterMappings.add(mapping);
+    }
+
     public AttributeMapping get(int index){
         return this.mappings.get(index);
     }
@@ -116,9 +127,40 @@ public class AttributeMappings {
         }
         max++;
         for (AttributeMapping attr : other.mappings) {
-            combinedMappings.add(attr.increaseIdx(max));
+            combinedMappings.add(attr.increaseIdx(maxOriginalRef + 1, max));
         }
+        combinedMappings.setMaxOriginalRef(maxOriginalRef + other.getMaxOriginalRef() + 1);
         return combinedMappings;
+    }
+
+    public void setMaxOriginalRef(int maxOriginalRef) {
+        this.maxOriginalRef = maxOriginalRef;
+    }
+
+    public int getMaxOriginalRef() {
+        return maxOriginalRef;
+    }
+
+    public List<AttributeMapping> getRelevantMappings(){
+        List<AttributeMapping> relevantMappings = new ArrayList<>();
+        relevantMappings.addAll(this.mappings);
+        for (AttributeMapping mapping : this.filterMappings) {
+            if (stillRelevant(mapping)){
+                relevantMappings.add(mapping);
+            }
+        }
+        return relevantMappings;
+    }
+
+    public boolean stillRelevant(AttributeMapping mapping){
+        AttributeStatistics stats = mapping.getCompliantStats();
+        for (AttributeMapping relevantMapping : this.mappings) {
+            AttributeStatistics tempStats = relevantMapping.getCompliantStats();
+            if (tempStats != null && tempStats.equals(stats)){
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
@@ -127,6 +169,11 @@ public class AttributeMappings {
         for (AttributeMapping mapping : this.mappings) {
             clonedMappings.add(mapping.clone());
         }
+
+        for (AttributeMapping mapping : this.filterMappings) {
+            clonedMappings.addFilterMapping(mapping.clone());
+        }
+        clonedMappings.setMaxOriginalRef(this.maxOriginalRef);
         return clonedMappings;
     }
 }

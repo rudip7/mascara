@@ -1,60 +1,182 @@
 package de.tub.dima.mascara.optimizer;
 
 import de.tub.dima.mascara.CompliantPlan;
-import de.tub.dima.mascara.optimizer.iqMetadata.AttributeMetadata;
-import de.tub.dima.mascara.optimizer.statistics.AttributeStatistics;
-import de.tub.dima.mascara.optimizer.statistics.DiscretizedMaskedAttributeStatistics;
-import de.tub.dima.mascara.optimizer.statistics.DiscretizedStatistics;
-import de.tub.dima.mascara.optimizer.statistics.MaskedAttributeStatistics;
+import de.tub.dima.mascara.DbConnector;
+import de.tub.dima.mascara.MascaraMaster;
+import de.tub.dima.mascara.dataMasking.Alphabet;
+import de.tub.dima.mascara.dataMasking.AlphabetCatalog;
+import de.tub.dima.mascara.dataMasking.tpch.alphabets.PhoneAlphabet;
+import de.tub.dima.mascara.dataMasking.tpch.inverseFunctions.InverseBlurPhone;
+import de.tub.dima.mascara.dataMasking.tpch.maskingFunctions.BlurPhone;
+import de.tub.dima.mascara.optimizer.statistics.*;
 import de.tub.dima.mascara.policies.AttributeMapping;
 import de.tub.dima.mascara.policies.AttributeMappings;
 import org.apache.calcite.rel.RelNode;
-import org.apache.calcite.rel.metadata.RelMetadataQuery;
+import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
+import org.apache.calcite.sql.SqlNode;
+import org.apache.calcite.sql.SqlDialect;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import static java.util.Collections.addAll;
+import java.sql.SQLException;
+import java.util.*;
 
 public class QualityEstimator {
 
     public RelNode originalPlan;
+    public DbConnector dbConnector;
 
     public double originalCardinality;
 
-    public QualityEstimator(RelNode originalPlan) {
+    public QualityEstimator(RelNode originalPlan, DbConnector dbConnector) throws SQLException {
+        this.dbConnector = dbConnector;
         this.originalPlan = originalPlan;
-//        Double maxRowCount = RelMetadataQuery.instance().getMaxRowCount(originalPlan);
-//        Double minRowCount = RelMetadataQuery.instance().getMinRowCount(originalPlan);
-//        Double rowCount = RelMetadataQuery.instance().getRowCount(originalPlan);
 
-//        System.out.println(maxRowCount+" "+minRowCount+" "+ rowCount);
+        String query = MascaraMaster.planToSql(originalPlan);
+        originalCardinality = dbConnector.estimateCardinality(query);
+
     }
 
-    public double estimate(CompliantPlan plan, AttributeMappings queryMappings){
+    public double estimate(CompliantPlan plan, AttributeMappings queryMappings) throws SQLException {
         double relativeEntropy = 0.0;
-        for (int i = 0; i < queryMappings.size(); i++) {
-            AttributeMapping mapping = queryMappings.get(i);
+        for (AttributeMapping mapping : queryMappings.getRelevantMappings()){
             if (mapping.isMasked()){
-                if (mapping.getOriginalStats() instanceof DiscretizedStatistics && mapping.getCompliantStats() instanceof DiscretizedMaskedAttributeStatistics){
-                    relativeEntropy += estimateRelativeEntropy(mapping.getOriginalStats(), (DiscretizedMaskedAttributeStatistics) mapping.getCompliantStats());
-                } else if (mapping.getCompliantStats() instanceof MaskedAttributeStatistics) {
-                    relativeEntropy += estimateRelativeEntropy(mapping.getOriginalStats(), (MaskedAttributeStatistics) mapping.getCompliantStats());
+                double attributeRelativeEntropy = 0.0;
+                if (mapping.getCompliantStats().getRelativeEntropy() >= 0.0){
+                    attributeRelativeEntropy = mapping.getCompliantStats().getRelativeEntropy();
+                } else if (mapping.getCompliantStats() instanceof SuppressedAttributeStatistics && ((SuppressedAttributeStatistics) mapping.getCompliantStats()).isStillSuppressed()){
+                    attributeRelativeEntropy = estimateRelativeEntropySuppressed(mapping.getOriginalStats(), mapping.getCompliantStats());
+                } else if (mapping.getOriginalStats() instanceof DiscretizedStatistics){
+                    attributeRelativeEntropy = estimateRelativeEntropyDiscretized(mapping.getOriginalStats(), mapping.getCompliantStats());
+                } else {
+                    attributeRelativeEntropy = estimateRelativeEntropy(mapping.getOriginalStats(), mapping.getCompliantStats());
+                }
+                relativeEntropy += attributeRelativeEntropy;
+                System.out.println(attributeRelativeEntropy+" for attribute: "+mapping.getOriginalStats().attname+" and tables: "+mapping.getOriginalStats().tableName.get(1)+", "+mapping.getCompliantStats().tableName.get(1));
+            }
+        }
+
+        Long compliantCardinality = dbConnector.estimateCardinality(plan.getCompliantQuery());
+
+        double penaltyFactor = (Math.abs(originalCardinality - compliantCardinality) / originalCardinality) + 1.0;
+        System.out.println("Penalty factor: "+penaltyFactor);
+        double utilityScore = relativeEntropy * penaltyFactor;
+        plan.setUtilityScore(utilityScore);
+        return utilityScore;
+    }
+
+    private double estimateRelativeEntropyBlurPhone(AttributeStatistics original, AttributeStatistics masked) {
+        // TODO: Hardcoded for now, this should be later removed
+        double relativeEntropy = 0.0;
+        PhoneAlphabet phoneAlphabet = (PhoneAlphabet) AlphabetCatalog.getInstance().getAlphabet("phoneAlphabet");
+
+        double originalAbsFreq = ((DiscretizedStatistics) original).getSumAbsoluteFreq();
+        List<String> sortedKeys = new ArrayList<>(masked.getDist().keySet());
+        Collections.sort(sortedKeys);
+
+        for (String x : sortedKeys) {
+            String xMin = InverseBlurPhone.min(x);
+            String xMax = InverseBlurPhone.max(x);
+            long indexMin = phoneAlphabet.indexOf(xMin);
+            long indexMax = phoneAlphabet.indexOf(xMax);
+
+            Float qX = masked.getFreq(x) / 10000000;
+
+            int minBucketIdx = original.getBucketIdx(xMin);
+            int maxBucketIdx = original.getBucketIdx(xMax);
+            // Value not in Histogram
+            if (minBucketIdx == -1){
+                minBucketIdx = 0;
+            }
+            if (maxBucketIdx == -1){
+                maxBucketIdx = original.getHistogramBounds().length - 2;
+            }
+
+            for (int i = minBucketIdx; i < maxBucketIdx; i++) {
+                Long oglLowIdxBound = original.getHistogramIdx(i);
+                Long oglHighIdxBound = original.getHistogramIdx(i + 1);
+                double pX = original.getHistApprxFreq(i) / originalAbsFreq;
+                if (indexMin > oglLowIdxBound && indexMax < oglHighIdxBound){
+                    // Masked values within bucket
+                    relativeEntropy += (indexMax - indexMin) * pX * log(pX / qX);
+                } else if (indexMin > oglLowIdxBound){
+                    // Masked values partially within bucket (low)
+                    relativeEntropy += (oglHighIdxBound - indexMin) * pX * log(pX / qX);
+                } else if (indexMax < oglHighIdxBound){
+                    // Masked values partially within bucket (high)
+                    relativeEntropy += (indexMax - oglLowIdxBound) * pX * log(pX / qX);
+                } else {
+                    // Bucket should be completely included
+                    relativeEntropy += (oglHighIdxBound - oglLowIdxBound) * pX * log(pX / qX);
                 }
             }
         }
+
         return relativeEntropy;
     }
 
-    /**
-     * Estimate relative entropy for discretized continuous domains.
-     * @param original
-     * @param masked
-     * @return
-     */
-    public double estimateRelativeEntropy(AttributeStatistics original, DiscretizedMaskedAttributeStatistics masked) {
+//    private void convertMCVtoHist(DiscretizedAttributeStatistics masked) {
+//        ArrayList<String> sortedKeys = new ArrayList<>(masked.getDist().keySet());
+//        Collections.sort(sortedKeys);
+//
+//        masked.histogramBounds = new String[sortedKeys.size() + 1];
+//        float[] histApprxFreq = new float[sortedKeys.size()];
+//        for (int i = 0; i < sortedKeys.size(); i++) {
+//            masked.histogramBounds[i] = sortedKeys.get(i);
+//            histApprxFreq[i] = masked.getFreq(sortedKeys.get(i));
+//        }
+//        masked.histogramBounds[sortedKeys.size()] = InverseBlurPhone.max(sortedKeys.get(sortedKeys.size()-1));
+//
+//        masked.mostCommonVals = null;
+//        masked.dist = null;
+//        masked.restFreq = 1.0f;
+//
+//        masked.discretizeStatistics();
+//
+//    }
+
+    public double estimateRelativeEntropySuppressed(AttributeStatistics original, AttributeStatistics masked) {
+        double relativeEntropy = 0.0;
+        double qX = 1.0 / (original.getSize() * original.getnDistinct());
+
+        if (original.getnDistinct() == original.getSize()){
+            double pX = 1.0 / original.getSize();
+
+            return original.getnDistinct() * pX * log(pX / qX);
+        }
+
+        int mcv = original.getDist().keySet().size();
+        for (String x : original.getDist().keySet()) {
+            Float pX = original.getFreq(x) / original.getSize();
+            relativeEntropy += pX * log(pX / qX);
+        }
+        if (original.getnDistinct() > mcv){
+            long restDistinct = original.getnDistinct() - mcv;
+            Float pX = original.getRestFreq() / restDistinct;
+            relativeEntropy += restDistinct * pX * log(pX / qX);
+        }
+
+        masked.setRelativeEntropy(relativeEntropy);
+
+        return relativeEntropy;
+    }
+
+    public double estimateRelativeEntropyNDistinct(AttributeStatistics original, AttributeStatistics masked){
+        double pX = 1.0 / original.getnDistinct();
+        double qX = 1.0 / masked.getnDistinct();
+
+        return original.getnDistinct() * pX * log(pX / qX);
+    }
+
+        /**
+         * Estimate relative entropy for discretized continuous domains.
+         * @param original
+         * @param masked
+         * @return
+         */
+    public double estimateRelativeEntropyDiscretized(AttributeStatistics original, AttributeStatistics masked) {
+        if (original.getnDistinct() > original.getSize() * 0.99){
+            return estimateRelativeEntropyNDistinct(original, masked);
+        }
+
         // Create a union of the most common values
         Set<String> values = new HashSet<>();
         values.addAll(original.getDist().keySet());
@@ -63,6 +185,7 @@ public class QualityEstimator {
         long notFoundInOriginal = 0;
         long notFoundInMasked = 0;
 
+        // Count missing values in MCV that are not contained in the equi-depths histograms
         for (String x : values) {
             Float pX = original.getFreq(x);
             if (pX == null) pX = 0.0f;
@@ -79,6 +202,7 @@ public class QualityEstimator {
             }
         }
 
+        // Check when histograms stop to overlap and add difference to either notFoundInOriginal or notFoundInMasked
         if (original.hasHistogram() && masked.hasHistogram()) {
             Long originalHistLow = original.getHistogramIdx(0);
             Long maskedHistLow = masked.getHistogramIdx(0);
@@ -108,13 +232,14 @@ public class QualityEstimator {
         }
 
         double originalAbsFreq = ((DiscretizedStatistics) original).getSumAbsoluteFreq() + notFoundInOriginal;
-        double maskedAbsFreq = masked.getSumAbsoluteFreq() + notFoundInMasked;
+        double maskedAbsFreq = ((DiscretizedStatistics) masked).getSumAbsoluteFreq() + notFoundInMasked;
 
         double relativeEntropy = 0.0;
 
         int[] originalFoundInHist = original.hasHistogram() ? new int[original.getHistogramBounds().length - 1] : null;
         int[] maskedFoundInHist = masked.hasHistogram() ? new int[masked.getHistogramBounds().length - 1] : null;
 
+        double sumPX = 0.0;
         for (String x : values) {
             Double pX = original.getFreq(x) / originalAbsFreq;
             Double qX = masked.getFreq(x) / maskedAbsFreq;
@@ -144,7 +269,8 @@ public class QualityEstimator {
             }
 
             if (pX > 0.0 && qX > 0.0) {
-                relativeEntropy += pX * Math.log(pX / qX);
+                sumPX += pX;
+                relativeEntropy += pX * log(pX / qX);
             } else {
                 System.out.println("This should not happen");
             }
@@ -171,7 +297,7 @@ public class QualityEstimator {
                         // masked low bound is smaller than the original low bound (cases 1 and 2)
                         if (oglBin == 0 && mskHighIdxBound <= oglLowIdxBound) {
                             // masked bin completely out of original histogram
-                            relativeEntropy += (mskHighIdxBound - mskLowIdxBound) * (minPX * Math.log(minPX / qX));
+                            relativeEntropy += (mskHighIdxBound - mskLowIdxBound) * (minPX * log(minPX / qX));
                             mskBin++;
                             if (mskBin < masked.getHistogramIdx().length - 2) {
                                 mskLowIdxBound = masked.getHistogramIdx(mskBin);
@@ -182,7 +308,7 @@ public class QualityEstimator {
                         }
                         if (oglBin == 0) {
                             // special case for the first bin
-                            relativeEntropy += (oglLowIdxBound - mskLowIdxBound) * (minPX * Math.log(minPX / qX));
+                            relativeEntropy += (oglLowIdxBound - mskLowIdxBound) * (minPX * log(minPX / qX));
                         }
                         if (oglHighIdxBound >= mskHighIdxBound) {
                             // Case 1:
@@ -190,7 +316,7 @@ public class QualityEstimator {
                             // masked high bound is also smaller than the original high bound
                             //     |--------|
                             // |--------|
-                            relativeEntropy += (mskHighIdxBound - oglLowIdxBound) * (pX * Math.log(pX / qX));
+                            relativeEntropy += (mskHighIdxBound - oglLowIdxBound) * (pX * log(pX / qX));
                             if (oglHighIdxBound.equals(mskHighIdxBound)) {
                                 // Original bin has also been completed
                                 oglBin++;
@@ -215,9 +341,9 @@ public class QualityEstimator {
                             // |--------------|
                             if (oglBin == 0) {
                                 // special case for the last bin
-                                relativeEntropy += (oglLowIdxBound - mskLowIdxBound) * (minPX * Math.log(minPX / qX));
+                                relativeEntropy += (oglLowIdxBound - mskLowIdxBound) * (minPX * log(minPX / qX));
                             }
-                            relativeEntropy += (oglHighIdxBound - oglLowIdxBound) * (pX * Math.log(pX / qX));
+                            relativeEntropy += (oglHighIdxBound - oglLowIdxBound) * (pX * log(pX / qX));
                             // Original bin has been completed
                             oglBin++;
                             if (oglBin < original.getHistogramIdx().length - 2) {
@@ -230,7 +356,7 @@ public class QualityEstimator {
                         // masked low bound is bigger than the original low bound (cases 3 and 4)
                         if (mskBin == 0 && oglHighIdxBound <= mskLowIdxBound) {
                             // original bin completely out of masked histogram
-                            relativeEntropy += (oglHighIdxBound - oglLowIdxBound) * (pX * Math.log(pX / minQX));
+                            relativeEntropy += (oglHighIdxBound - oglLowIdxBound) * (pX * log(pX / minQX));
                             oglBin++;
                             if (oglBin < original.getHistogramIdx().length - 2) {
                                 oglLowIdxBound = original.getHistogramIdx(oglBin);
@@ -241,7 +367,7 @@ public class QualityEstimator {
                         }
                         if (mskBin == 0) {
                             // special case for the first bin
-                            relativeEntropy += (mskLowIdxBound - oglLowIdxBound) * (pX * Math.log(pX / minQX));
+                            relativeEntropy += (mskLowIdxBound - oglLowIdxBound) * (pX * log(pX / minQX));
                         }
                         if (oglHighIdxBound >= mskHighIdxBound) {
                             // Case 3:
@@ -249,7 +375,7 @@ public class QualityEstimator {
                             // masked high bound is smaller than the original high bound
                             //     |--------|
                             //       |----|
-                            relativeEntropy += (mskHighIdxBound - mskLowIdxBound) * (pX * Math.log(pX / qX));
+                            relativeEntropy += (mskHighIdxBound - mskLowIdxBound) * (pX * log(pX / qX));
 
                             if (oglHighIdxBound.equals(mskHighIdxBound)) {
                                 // Original bin has also been completed
@@ -274,7 +400,7 @@ public class QualityEstimator {
                             // masked high bound is bigger than the original high bound
                             //     |--------|
                             //       |---------|
-                            relativeEntropy += (oglHighIdxBound - mskLowIdxBound) * (pX * Math.log(pX / qX));
+                            relativeEntropy += (oglHighIdxBound - mskLowIdxBound) * (pX * log(pX / qX));
                             // Original bin has been completed
                             oglBin++;
                             if (oglBin < original.getHistogramIdx().length - 2) {
@@ -288,7 +414,7 @@ public class QualityEstimator {
                 if (mskBin == masked.getHistogramIdx().length - 1 && oglBin < original.getHistogramIdx().length - 1) {
                     // Masked histogram was completely consumed
                     // compute rest of current bin
-                    relativeEntropy += (oglHighIdxBound - mskHighIdxBound) * (pX * Math.log(pX / qX));
+                    relativeEntropy += (oglHighIdxBound - mskHighIdxBound) * (pX * log(pX / qX));
 
                     oglBin++;
                     if (oglBin < original.getHistogramIdx().length - 2) {
@@ -299,7 +425,7 @@ public class QualityEstimator {
 
                     // Compute relative entropy for the last bins
                     while (oglBin < original.getHistogramIdx().length - 2) {
-                        relativeEntropy += (oglHighIdxBound - oglLowIdxBound) * (pX * Math.log(pX / minQX));
+                        relativeEntropy += (oglHighIdxBound - oglLowIdxBound) * (pX * log(pX / minQX));
                         oglBin++;
                         if (oglBin < original.getHistogramIdx().length - 2) {
                             oglLowIdxBound = original.getHistogramIdx(oglBin);
@@ -311,7 +437,7 @@ public class QualityEstimator {
                 } else if (mskBin < masked.getHistogramIdx().length - 1 && oglBin == original.getHistogramIdx().length - 1) {
                     // Original histogram was completely consumed
                     // compute rest of current bin
-                    relativeEntropy += (mskHighIdxBound - oglHighIdxBound) * (pX * Math.log(pX / qX));
+                    relativeEntropy += (mskHighIdxBound - oglHighIdxBound) * (pX * log(pX / qX));
 
                     mskBin++;
                     if (mskBin < masked.getHistogramIdx().length - 2) {
@@ -322,7 +448,7 @@ public class QualityEstimator {
 
                     // Compute relative entropy for the last bins
                     while (mskBin < masked.getHistogramIdx().length - 2) {
-                        relativeEntropy += (mskHighIdxBound - mskLowIdxBound) * (minPX * Math.log(minPX / minQX));
+                        relativeEntropy += (mskHighIdxBound - mskLowIdxBound) * (minPX * log(minPX / minQX));
                         mskBin++;
                         if (mskBin < masked.getHistogramIdx().length - 2) {
                             mskLowIdxBound = masked.getHistogramIdx(mskBin);
@@ -335,17 +461,27 @@ public class QualityEstimator {
             } else if (original.hasHistogram() && !masked.hasHistogram()) {
                 // Case 2: Equi-depth histogram available for the original attribute.
                 int oglBin = 0;
-                Long oglLowIdxBound = original.getHistogramIdx(oglBin);
-                Long oglHighIdxBound = original.getHistogramIdx(oglBin + 1);
+//                Long oglLowIdxBound = original.getHistogramIdx(oglBin);
+//                Long oglHighIdxBound = original.getHistogramIdx(oglBin + 1);
                 double pX = original.getHistApprxFreq(oglBin) / originalAbsFreq;
 
-                double qX = Math.round(masked.getSumAbsoluteFreq() * masked.getRestFreq()) / maskedAbsFreq;
+                double qX;
+                if (masked.getRestFreq() > 0.0) {
+                    qX = Math.round(((DiscretizedStatistics) masked).getSumAbsoluteFreq() * masked.getRestFreq()) / maskedAbsFreq;
+                } else {
+                    qX = 1.0 / maskedAbsFreq;
+                }
+
+
                 while (oglBin < original.getHistogramIdx().length - 1) {
-                    relativeEntropy += (oglHighIdxBound - oglLowIdxBound) * (pX * Math.log(pX / qX));
+                    long remainingOgl = original.getHistApprxNDistinct(oglBin) - originalFoundInHist[oglBin];
+                    if (remainingOgl > 0){
+                        relativeEntropy += remainingOgl * (pX * log(pX / qX));
+                    }
                     oglBin++;
                     if (oglBin < original.getHistogramIdx().length - 2) {
-                        oglLowIdxBound = original.getHistogramIdx(oglBin);
-                        oglHighIdxBound = original.getHistogramIdx(oglBin + 1);
+//                        oglLowIdxBound = original.getHistogramIdx(oglBin);
+//                        oglHighIdxBound = original.getHistogramIdx(oglBin + 1);
                         pX = original.getHistApprxFreq(oglBin) / originalAbsFreq;
                     }
                 }
@@ -354,24 +490,28 @@ public class QualityEstimator {
                 // Case 3: Equi-depth histogram available for the masked attribute.
 
                 int mskBin = 0;
-                Long mskLowIdxBound = masked.getHistogramIdx(mskBin);
-                Long mskHighIdxBound = masked.getHistogramIdx(mskBin + 1);
+//                Long mskLowIdxBound = masked.getHistogramIdx(mskBin);
+//                Long mskHighIdxBound = masked.getHistogramIdx(mskBin + 1);
                 double qX = masked.getHistApprxFreq(mskBin) / maskedAbsFreq;
 
                 double pX = Math.round(((DiscretizedStatistics) original).getSumAbsoluteFreq() * original.getRestFreq()) / originalAbsFreq;
                 while (mskBin < masked.getHistogramIdx().length - 1) {
-                    relativeEntropy += (mskHighIdxBound - mskLowIdxBound) * (pX * Math.log(pX / qX));
+                    long remainingMsk = masked.getHistApprxNDistinct(mskBin) - maskedFoundInHist[mskBin];
+                    if (remainingMsk > 0){
+                        relativeEntropy += remainingMsk * (pX * log(pX / qX));
+                    }
                     mskBin++;
                     if (mskBin < masked.getHistogramIdx().length - 2) {
-                        mskLowIdxBound = original.getHistogramIdx(mskBin);
-                        mskHighIdxBound = original.getHistogramIdx(mskBin + 1);
+//                        mskLowIdxBound = original.getHistogramIdx(mskBin);
+//                        mskHighIdxBound = original.getHistogramIdx(mskBin + 1);
                         qX = masked.getHistApprxFreq(mskBin) / maskedAbsFreq;
                     }
                 }
 
             }
         }
-        System.out.println(relativeEntropy+" for attribute "+original.attname+" and tables "+original.tableName.get(1)+", "+masked.tableName.get(1));
+        relativeEntropy = relativeEntropy < 0 ? relativeEntropy * -1 : relativeEntropy;
+        masked.setRelativeEntropy(relativeEntropy);
         return relativeEntropy;
     }
 
@@ -382,7 +522,7 @@ public class QualityEstimator {
      * @param masked
      * @return
      */
-    public double estimateRelativeEntropy(AttributeStatistics original, MaskedAttributeStatistics masked){
+    public double estimateRelativeEntropy(AttributeStatistics original, AttributeStatistics masked){
         // Create a union of the most common values
         Set<String> values = new HashSet<>();
         values.addAll(original.getDist().keySet());
@@ -413,7 +553,7 @@ public class QualityEstimator {
             }
 
             if (pX > 0.0 && qX > 0.0){
-                relativeEntropy += pX * Math.log(pX / qX);
+                relativeEntropy += pX * log(pX / qX);
             }
         }
 
@@ -435,7 +575,7 @@ public class QualityEstimator {
                 float pX = original.getDist().get(x);
                 int binIdx = masked.getBucketIdx(x);
                 float approxQX = masked.getHistApprxFreq(binIdx);
-                relativeEntropy += pX * Math.log(pX / approxQX);
+                relativeEntropy += pX * log(pX / approxQX);
             }
             if (original.getRestFreq() > 0.1) {
                 // compute entropy of elements with approximate frequencies
@@ -451,7 +591,7 @@ public class QualityEstimator {
                     if (mskBinIdxLow == mskBinIdxHigh) {
                         float approxQX = masked.getHistApprxFreq(mskBinIdxLow);
                         relativeEntropy +=
-                                original.getHistApprxNDistinct(oglBinIdx) * (approxPX * Math.log(approxPX / approxQX));
+                                original.getHistApprxNDistinct(oglBinIdx) * (approxPX * log(approxPX / approxQX));
                     } else {
                         long[] possibleNDistinct = new long[mskBinIdxHigh + 1 - mskBinIdxLow];
                         // compute number of possible values in first and last bin
@@ -479,7 +619,7 @@ public class QualityEstimator {
                         for (int i = 0, idx = mskBinIdxLow; i < possibleNDistinct.length; i++, idx++) {
                             double approxQX = masked.getHistApprxFreq(idx);
                             double apprxNDistinctBin = relPossibleNDistinct[i] * original.getHistApprxNDistinct(oglBinIdx);
-                            relativeEntropy += apprxNDistinctBin * (approxPX * Math.log(approxPX / approxQX));
+                            relativeEntropy += apprxNDistinctBin * (approxPX * log(approxPX / approxQX));
                         }
                     }
                 }
@@ -492,7 +632,7 @@ public class QualityEstimator {
             // Recompute entropy for missing values with exact frequency in the original stats and no entry in the masked stats
             for (String x : toRecompute) {
                 double pX = original.getDist().get(x);
-                relativeEntropy += pX * Math.log(pX / maskedAppxFreq);
+                relativeEntropy += pX * log(pX / maskedAppxFreq);
             }
 
             if (original.getRestFreq() > 0.1){
@@ -501,7 +641,7 @@ public class QualityEstimator {
                     // Compute entropy of elements with approximate frequencies
                     for (int oglBinIdx = 0; oglBinIdx < original.getHistApprxFreq().length; oglBinIdx++) {
                         double approxPX = original.getHistApprxFreq(oglBinIdx);
-                        relativeEntropy += original.getHistApprxNDistinct()[oglBinIdx] * (approxPX * Math.log(approxPX / maskedAppxFreq));
+                        relativeEntropy += original.getHistApprxNDistinct()[oglBinIdx] * (approxPX * log(approxPX / maskedAppxFreq));
                     }
 
                     // Case 3: No Equi-depth histograms available.
@@ -512,13 +652,19 @@ public class QualityEstimator {
                     double originalAppxFreq = originalRestFreq / originalNAppxVals;
 
                     if (originalAppxFreq > 0.0001 && maskedAppxFreq > 0.0001) {
-                        relativeEntropy += originalNAppxVals * (originalAppxFreq * Math.log(originalAppxFreq / maskedAppxFreq));
+                        relativeEntropy += originalNAppxVals * (originalAppxFreq * log(originalAppxFreq / maskedAppxFreq));
                     }
                 }
             }
         }
 
 
+        relativeEntropy = relativeEntropy < 0 ? relativeEntropy * -1 : relativeEntropy;
+        masked.setRelativeEntropy(relativeEntropy);
         return relativeEntropy;
+    }
+    
+    private double log(double value){
+        return Math.log(value) / Math.log(2);
     }
 }

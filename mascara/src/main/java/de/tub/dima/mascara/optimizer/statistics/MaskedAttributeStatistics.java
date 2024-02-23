@@ -43,6 +43,10 @@ public class MaskedAttributeStatistics extends AttributeStatistics{
     }
 
     protected void inverseDistribution(InverseMaskingFunction inverseMF){
+        if (mostCommonVals == null){
+            return;
+        }
+
         List<String> newVals = new ArrayList<>();
         List<Float> newFreqs = new ArrayList<>();
 

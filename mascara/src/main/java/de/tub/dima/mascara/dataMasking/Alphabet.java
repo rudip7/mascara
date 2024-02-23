@@ -4,11 +4,11 @@ import java.util.List;
 import java.util.Map;
 
 public abstract class Alphabet {
-    public Map<String, Integer> alphabet;
+    public Map<String, Long> alphabet = null;
 
     public long indexOf(String value){
         if (this.alphabet != null){
-            Integer index = this.alphabet.get(value);
+            Long index = this.alphabet.get(value);
             if (index != null){
                 return index;
             }
@@ -32,5 +32,9 @@ public abstract class Alphabet {
             return 1;
         }
         return -1;
+    }
+
+    public Map<String, Long> getAlphabet() {
+        return alphabet;
     }
 }

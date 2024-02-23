@@ -40,6 +40,8 @@ public class Parser {
                 .defaultSchema(connection.getRootSchema().getSubSchema(defaultSchema))
                 .build();
 
+
+
         this.planner = Frameworks.getPlanner(frameworkConfig);
 
         this.schema = connection.getRootSchema();
@@ -57,6 +59,7 @@ public class Parser {
     }
     public SqlNode parse(String sql) throws Exception {
         return planner.parse(sql);
+
     }
 
     public SqlNode validate(SqlNode node) throws ValidationException {

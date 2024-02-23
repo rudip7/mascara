@@ -7,14 +7,17 @@ public class FloatAlphabet extends DiscretizedAlphabet {
 
     public double lowerBound;
     public double upperBound;
+    public int precision;
     public double accuracy;
-    public FloatAlphabet(float lowerBound, float upperBound, float accuracy) {
+    public FloatAlphabet(float lowerBound, float upperBound, int precision) {
         this.lowerBound = lowerBound;
         this.upperBound = upperBound;
-        this.accuracy = accuracy;
+        this.precision = precision;
+        this.accuracy = Math.pow(10, -precision);
+        this.discretize = true;
     }
     public FloatAlphabet(){
-        this(Float.MIN_VALUE, Float.MAX_VALUE, 0.1f);
+        this(Float.MIN_VALUE, Float.MAX_VALUE, 1);
     }
 
 

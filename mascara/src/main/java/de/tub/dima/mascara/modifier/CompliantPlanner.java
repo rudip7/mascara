@@ -145,6 +145,7 @@ public class CompliantPlanner extends RelVisitor {
 
     private Pair<List<RexInputRef>, List<RelBuilder.AggCall>> getCompliantAggregate(Aggregate aggregate){
         AttributeMappings newAttributeMappings = new AttributeMappings();
+        newAttributeMappings.setMaxOriginalRef(attributeMappings.getMaxOriginalRef());
         int i = 0;
         int j = 0;
         List<Integer> groupSet = aggregate.getGroupSet().asList();
@@ -193,6 +194,7 @@ public class CompliantPlanner extends RelVisitor {
         List<String> names = new ArrayList<>();
         List<RexNode> compliantProjects = new ArrayList<>();
         AttributeMappings newAttributeMappings = new AttributeMappings();
+        newAttributeMappings.setMaxOriginalRef(attributeMappings.getMaxOriginalRef());
         int j = 0;
         for (int i = 0; i < namedProjects.size(); i++) {
             Pair<RexNode, String> pair = namedProjects.get(i);
@@ -246,8 +248,23 @@ public class CompliantPlanner extends RelVisitor {
                 AttributeMapping rightCompliantAttribute = this.attributeMappings.getCompliantAttribute(rightInputRef);
                 if (leftCompliantAttribute == null || rightCompliantAttribute == null){
                     return null;
-                } else if (leftCompliantAttribute.isMasked() || rightCompliantAttribute.isMasked()) {
-                    throw new RuntimeException("Join predicate on masked attribute: Case not covered yet.");
+                }
+
+                if (leftCompliantAttribute.isMasked()){
+                    this.queryAttributes.addFilterMapping(leftCompliantAttribute);
+                }
+                if (rightCompliantAttribute.isMasked()){
+                    this.queryAttributes.addFilterMapping(rightCompliantAttribute);
+                }
+
+                if (leftCompliantAttribute.dataTypeChanged() && rightCompliantAttribute.dataTypeChanged()) {
+                    return null;
+                } else if (leftCompliantAttribute.dataTypeChanged() && !rightCompliantAttribute.dataTypeChanged()) {
+                    RexCall maskedExpression = leftCompliantAttribute.maskValue(rightCompliantAttribute.newRef, builder);
+                    return builder.call(condition.getOperator(), leftCompliantAttribute.newRef, maskedExpression);
+                } else if (!leftCompliantAttribute.dataTypeChanged() && rightCompliantAttribute.dataTypeChanged()) {
+                    RexCall maskedExpression = rightCompliantAttribute.maskValue(leftCompliantAttribute.newRef, builder);
+                    return builder.call(condition.getOperator(), maskedExpression, rightCompliantAttribute.newRef);
                 } else {
                     return builder.call(condition.getOperator(), leftCompliantAttribute.newRef, rightCompliantAttribute.newRef);
                 }
@@ -269,6 +286,9 @@ public class CompliantPlanner extends RelVisitor {
             }
 
             AttributeMapping compliantAttribute = this.attributeMappings.getCompliantAttribute(inputRef);
+            if (compliantAttribute.isMasked()){
+                this.queryAttributes.addFilterMapping(compliantAttribute);
+            }
 
             if (compliantAttribute == null || (compliantAttribute.isMasked() && compliantAttribute.getMaskingFunction() instanceof Suppression)){
                 // Attribute is suppressed

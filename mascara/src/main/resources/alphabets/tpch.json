@@ -1,13 +1,23 @@
 {
   "public": {
     "lineitem": {
-      "l_extendedprice" : "discretizedIntegerAlphabet",
+      "l_orderkey" : "integerAlphabet",
+      "l_suppkey" : "integerAlphabet",
+      "l_quantity" : "integerAlphabet",
+      "l_extendedprice" : "integerAlphabet",
+      "l_discount" : "percentageAlphabet",
+      "l_tax" : "percentageAlphabet",
       "l_shipdate" : "dateAlphabet",
       "l_commitdate" : "dateAlphabet",
       "l_receiptdate" : "dateAlphabet"
     },
     "orders": {
-      "o_orderdate" : "dateAlphabet"
+      "o_orderdate" : "dateAlphabet",
+      "o_shippriority" : "shipPriorityAlphabet"
+    },
+    "customer": {
+      "c_acctbal" : "integerAlphabet",
+      "c_phone" : "phoneAlphabet"
     }
   }
 }

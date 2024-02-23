@@ -23,7 +23,7 @@ public class DiscretizedAttributeStatistics extends AttributeStatistics implemen
         discretizeStatistics();
     }
 
-    private void discretizeStatistics() {
+    public void discretizeStatistics() {
         DiscretizedAlphabet discretizedAlphabet = (DiscretizedAlphabet) alphabet;
         // Check if values are already discretizable
         if (histogramBounds != null && histogramBounds.length > 0) {
@@ -60,7 +60,7 @@ public class DiscretizedAttributeStatistics extends AttributeStatistics implemen
                     } else {
                         // Remove value from the corresponding bin
                         int idx = getBucketIdx(discMostCommonVals[i]);
-                        if (idx >= 0) {
+                        if (idx >= 0 && histApprxNDistinct[idx] > 1) {
                             histApprxNDistinct[idx] -= 1;
                         }
                         Float absFreq = Float.valueOf(Math.round(mostCommonFreqs[i] * size) + 1);
@@ -82,7 +82,7 @@ public class DiscretizedAttributeStatistics extends AttributeStatistics implemen
 
     @Override
     public int getBucketIdx(String val) {
-        if (alphabet != null){
+        if (alphabet != null && discHistogramBounds != null){
             long idx = alphabet.indexOf(val);
             if (alphabet.indexOf(discHistogramBounds[0]) <= idx){
                 for (int i = 1; i < discHistogramBounds.length; i++) {

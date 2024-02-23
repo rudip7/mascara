@@ -11,6 +11,7 @@ import org.apache.calcite.schema.SchemaPlus;
 
 import javax.sql.DataSource;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
@@ -81,6 +82,20 @@ public class DbConnector {
         return tableStatistics;
     }
 
+    public List<String> getAttributeNames(List<String> tableName) throws SQLException {
+        String query = "SELECT attname FROM pg_attribute WHERE attrelid = '"+tableName.get(tableName.size()-1)+"'::regclass AND attnum > 0";
+        try (Statement stmt = jdbcConnection.createStatement()) {
+            ResultSet rs = stmt.executeQuery(query);
+            List<String> attributeNames = new ArrayList<>();
+            while (rs.next()) {
+                attributeNames.add(rs.getString("attname"));
+            }
+            return attributeNames;
+        } catch (SQLException e) {
+            throw e;
+        }
+    }
+
     public Long getTableSize(List<String> tableName) throws SQLException {
         Long size = -1L;
         String query;
@@ -98,6 +113,21 @@ public class DbConnector {
             throw e;
         }
         return size;
+    }
+
+    public Long estimateCardinality(String query) throws SQLException {
+        Long cardinality = -1L;
+        String queryCardinality = "EXPLAIN (FORMAT JSON) "+query;
+        try (Statement stmt = jdbcConnection.createStatement()) {
+            ResultSet rs = stmt.executeQuery(queryCardinality);
+            while (rs.next()) {
+                String plan = rs.getString(1);
+                cardinality = Long.parseLong(plan.split("\"Plan Rows\": ")[1].split(",")[0]);
+            }
+        } catch (SQLException e) {
+            throw e;
+        }
+        return cardinality;
     }
 
     public String getPolicyDefinition(String policyName) throws SQLException {

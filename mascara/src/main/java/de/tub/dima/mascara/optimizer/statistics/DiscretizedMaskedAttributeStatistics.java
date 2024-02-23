@@ -21,6 +21,9 @@ public class DiscretizedMaskedAttributeStatistics extends MaskedAttributeStatist
     @Override
     protected void inverseHistogramBounds(InverseMaskingFunction inverseMF) {
         super.inverseHistogramBounds(inverseMF);
+        if (histogramBounds == null){
+            return;
+        }
         histApprxNDistinct = new Long[unmskHistogramBounds.length - 1];
         for (int i = 0; i < this.unmskHistogramBounds.length; i++) {
             if (i > 0){

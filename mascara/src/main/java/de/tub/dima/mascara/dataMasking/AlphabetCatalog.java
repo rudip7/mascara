@@ -4,10 +4,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.tub.dima.mascara.dataMasking.medical.alphabets.DiagnosisAlphabet;
 import de.tub.dima.mascara.dataMasking.medical.alphabets.IntegerAlphabet;
-import de.tub.dima.mascara.dataMasking.medical.alphabets.PhoneAlphabet;
+
 import de.tub.dima.mascara.dataMasking.medical.alphabets.ZipAlphabet;
 import de.tub.dima.mascara.dataMasking.tpch.alphabets.DateAlphabet;
 import de.tub.dima.mascara.dataMasking.tpch.alphabets.FloatAlphabet;
+import de.tub.dima.mascara.dataMasking.tpch.alphabets.PhoneAlphabet;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,18 +32,24 @@ public class AlphabetCatalog {
 
 
     private AlphabetCatalog() {
-        DateAlphabet dateAlphabet = new DateAlphabet();
-        IntegerAlphabet integerAlphabet = new IntegerAlphabet();
-        IntegerAlphabet discretizedIntegerAlphabet = new IntegerAlphabet(true);
+        DateAlphabet dateAlphabet = new DateAlphabet(true);
+        IntegerAlphabet integerAlphabet = new IntegerAlphabet(true);
+//        IntegerAlphabet discretizedIntegerAlphabet = new IntegerAlphabet(true);
         FloatAlphabet floatAlphabet = new FloatAlphabet();
+        FloatAlphabet percentageAlphabet = new FloatAlphabet(0.0f, 1.0f, 2);
+        IntegerAlphabet shipPriorityAlphabet = new IntegerAlphabet(1, 5);
+        PhoneAlphabet phoneAlphabet = new PhoneAlphabet();
 //        FloatAlphabet floatAlphabet = new FloatAlphabet();
 
         this.alphabets = new HashMap<>();
         this.alphabets.put("dateAlphabet", dateAlphabet);
         this.alphabets.put("integerAlphabet", integerAlphabet);
-        this.alphabets.put("discretizedIntegerAlphabet", discretizedIntegerAlphabet);
+//        this.alphabets.put("discretizedIntegerAlphabet", discretizedIntegerAlphabet);
         this.alphabets.put("floatAlphabet", floatAlphabet);
-        this.alphabets.put("floatAlphabet", floatAlphabet);
+        this.alphabets.put("percentageAlphabet", percentageAlphabet);
+        this.alphabets.put("shipPriorityAlphabet", shipPriorityAlphabet);
+        this.alphabets.put("phoneAlphabet", phoneAlphabet);
+
 
         fromJSON("src/main/resources/alphabets/tpch.json");
     }

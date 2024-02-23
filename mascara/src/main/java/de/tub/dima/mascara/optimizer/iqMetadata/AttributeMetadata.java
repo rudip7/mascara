@@ -4,6 +4,7 @@ import de.tub.dima.mascara.dataMasking.Generalization;
 import de.tub.dima.mascara.dataMasking.MaskingFunction;
 import de.tub.dima.mascara.optimizer.statistics.AttributeStatistics;
 import de.tub.dima.mascara.optimizer.statistics.MaskedAttributeStatistics;
+import de.tub.dima.mascara.optimizer.statistics.PrecomputedStatistics;
 import de.tub.dima.mascara.optimizer.statistics.StatisticsManager;
 
 import java.util.List;
@@ -61,6 +62,9 @@ public class AttributeMetadata {
     public void triggerEstimateHistFreq(){
         getStats();
         if(stats != null){
+            if (stats instanceof PrecomputedStatistics){
+                return;
+            }
             if (this.maskingFunction != null && this.maskingFunction instanceof Generalization && ((Generalization) this.maskingFunction).getInverseMaskingFunction() != null){
                 if (!(stats instanceof MaskedAttributeStatistics)){
                     System.out.println("This was not expected");
