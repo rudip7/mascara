@@ -15,7 +15,7 @@ import static de.tub.dima.mascara.utils.Utils.readFile;
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 @State(Scope.Benchmark)
-public class EfficiencyOptimizationMasking {
+public class EfficiencyOverhead {
     private MascaraMaster mascara;
 
     private Map<String, RelRoot> logicalPlans;
@@ -61,7 +61,7 @@ public class EfficiencyOptimizationMasking {
     }
     public static void main(String[] args) throws Exception {
         Options opt = new OptionsBuilder()
-                .include(EfficiencyOptimizationMasking.class.getSimpleName())
+                .include(EfficiencyOverhead.class.getSimpleName())
                 .resultFormat(ResultFormatType.CSV)  // Set result format to CSV
                 .result("src/main/resources/results/efficiency/optimization_masking.csv")
                 .build();
@@ -76,7 +76,7 @@ public class EfficiencyOptimizationMasking {
     @Fork(value = 1, warmups = 1)
     @Warmup(iterations = 10, time = 200, timeUnit = TimeUnit.MILLISECONDS)
     @Measurement(iterations = 20, time = 200, timeUnit = TimeUnit.MILLISECONDS)
-    public List<CompliantPlan> benchmarkEstimate() throws Exception {
+    public List<CompliantPlan> benchmarkModify() throws Exception {
         RelRoot logicalPlan = logicalPlans.get(configuration);
         List<CompliantPlan> compliantPlan = compliantPlans.get(configuration);
         return mascara.estimateUtilityScores(logicalPlan, compliantPlan);

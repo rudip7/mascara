@@ -1,4 +1,4 @@
-select l_extendedprice, l_extendedprice, l_extendedprice, l_extendedprice, l_extendedprice, l_extendedprice, l_extendedprice, l_extendedprice
+select l_extendedprice, l_discount, o_orderdate, c_acctbal
 from customer, orders, lineitem
 where c_custkey = o_custkey
   AND l_orderkey = o_orderkey
