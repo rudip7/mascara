@@ -2,6 +2,7 @@ package de.tub.dima.mascara.policies;
 
 import de.tub.dima.mascara.dataMasking.Generalization;
 import de.tub.dima.mascara.dataMasking.MaskingFunction;
+import de.tub.dima.mascara.dataMasking.Perturbation;
 import de.tub.dima.mascara.optimizer.iqMetadata.AttributeMetadata;
 import de.tub.dima.mascara.optimizer.statistics.AttributeStatistics;
 import org.apache.calcite.rel.type.RelDataType;
@@ -111,7 +112,7 @@ public class AttributeMapping {
         return new AttributeMapping(this.originalAttribute, originalRef, this.compliantAttribute, newRef, this.name, this.masked, this.maskedRexCall, this.maskingFunction);
     }
     public boolean isAggregable(){
-        return !this.isMasked() || (this.maskingFunction instanceof Generalization && ((Generalization) this.maskingFunction).isAggregable());
+        return !this.isMasked() || this.maskingFunction instanceof Perturbation || (this.maskingFunction instanceof Generalization && ((Generalization) this.maskingFunction).isAggregable());
     }
 
     public void setAggregate() {

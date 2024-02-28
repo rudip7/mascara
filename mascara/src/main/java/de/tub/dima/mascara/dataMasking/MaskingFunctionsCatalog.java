@@ -1,5 +1,9 @@
 package de.tub.dima.mascara.dataMasking;
 
+import de.tub.dima.mascara.dataMasking.acs.Bucketize1;
+import de.tub.dima.mascara.dataMasking.acs.BucketizeLow1;
+import de.tub.dima.mascara.dataMasking.acs.NoiseCow;
+import de.tub.dima.mascara.dataMasking.acs.NoiseMar;
 import de.tub.dima.mascara.dataMasking.medical.maskingFunctions.*;
 import de.tub.dima.mascara.dataMasking.tpch.maskingFunctions.*;
 import de.tub.dima.mascara.dataMasking.tpch.maskingFunctions.AddRelativeNoise;
@@ -28,6 +32,11 @@ public class MaskingFunctionsCatalog {
         this.maskingFunctions.add(new Round());
         this.maskingFunctions.add(new BlurPhone());
         this.maskingFunctions.add(new AddLaplaceNoise());
+
+        this.maskingFunctions.add(new NoiseCow());
+        this.maskingFunctions.add(new NoiseMar());
+        this.maskingFunctions.add(new Bucketize1());
+        this.maskingFunctions.add(new BucketizeLow1());
 
 
         this.inverseMaskingFunctions = new ArrayList<>();

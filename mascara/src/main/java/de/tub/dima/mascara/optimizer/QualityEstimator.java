@@ -40,9 +40,10 @@ public class QualityEstimator {
         for (AttributeMapping mapping : queryMappings.getRelevantMappings()){
             if (mapping.isMasked()){
                 double attributeRelativeEntropy = 0.0;
-                if (mapping.getCompliantStats().getRelativeEntropy() >= 0.0){
-                    attributeRelativeEntropy = mapping.getCompliantStats().getRelativeEntropy();
-                } else if (mapping.getCompliantStats() instanceof SuppressedAttributeStatistics && ((SuppressedAttributeStatistics) mapping.getCompliantStats()).isStillSuppressed()){
+//                if (mapping.getCompliantStats().getRelativeEntropy() >= 0.0){
+//                    attributeRelativeEntropy = mapping.getCompliantStats().getRelativeEntropy();
+//                } else
+                if (mapping.getCompliantStats() instanceof SuppressedAttributeStatistics && ((SuppressedAttributeStatistics) mapping.getCompliantStats()).isStillSuppressed()){
                     attributeRelativeEntropy = estimateRelativeEntropySuppressed(mapping.getOriginalStats(), mapping.getCompliantStats());
                 } else if (mapping.getOriginalStats() instanceof DiscretizedStatistics){
                     attributeRelativeEntropy = estimateRelativeEntropyDiscretized(mapping.getOriginalStats(), mapping.getCompliantStats());
@@ -50,14 +51,18 @@ public class QualityEstimator {
                     attributeRelativeEntropy = estimateRelativeEntropy(mapping.getOriginalStats(), mapping.getCompliantStats());
                 }
                 relativeEntropy += attributeRelativeEntropy;
-                System.out.println(attributeRelativeEntropy+" for attribute: "+mapping.getOriginalStats().attname+" and tables: "+mapping.getOriginalStats().tableName.get(1)+", "+mapping.getCompliantStats().tableName.get(1));
+                plan.addAttributeEntropy(mapping.getOriginalStats().attname, attributeRelativeEntropy);
+//                System.out.println(attributeRelativeEntropy+" for attribute: "+mapping.getOriginalStats().attname+" and tables: "+mapping.getOriginalStats().tableName.get(1)+", "+mapping.getCompliantStats().tableName.get(1));
+            } else {
+                plan.addAttributeEntropy(mapping.getOriginalStats().attname, 0.0);
             }
         }
 
         Long compliantCardinality = dbConnector.estimateCardinality(plan.getCompliantQuery());
+        plan.setCardinalityDiff(Math.abs(originalCardinality - compliantCardinality)/ originalCardinality);
 
         double penaltyFactor = (Math.abs(originalCardinality - compliantCardinality) / originalCardinality) + 1.0;
-        System.out.println("Penalty factor: "+penaltyFactor);
+//        System.out.println("Penalty factor: "+penaltyFactor);
         double utilityScore = relativeEntropy * penaltyFactor;
         plan.setUtilityScore(utilityScore);
         return utilityScore;

@@ -16,22 +16,35 @@ public class PoliciesCatalog {
     public MaskingFunctionsCatalog maskingFunctionsCatalog;
 
     public PoliciesCatalog(DbConnector dbConnector, Parser parser, MaskingFunctionsCatalog maskingFunctionsCatalog) throws Exception {
+        this(dbConnector, parser, maskingFunctionsCatalog, null);
+
+    }
+    public PoliciesCatalog(DbConnector dbConnector, Parser parser, MaskingFunctionsCatalog maskingFunctionsCatalog, List<String> policyNames) throws Exception {
         this.policies = new ArrayList<>();
         this.maskingFunctionsCatalog = maskingFunctionsCatalog;
 
         String schemaName = "public";
-        List<String> policyNames = Arrays.asList(
-                "c_p1",
-                "c_p2",
-                "l_p1",
-                "l_p2",
-                "l_p3",
-                "o_p1",
-                "o_p2",
-                "n",
-                "s",
-                "r"
-                );
+        if (policyNames == null){
+            policyNames = Arrays.asList(
+                    "c_p1",
+                    "c_p2",
+                    "l_p1",
+                    "l_p2",
+                    "l_p3",
+                    "o_p1",
+                    "o_p2",
+                    "n",
+                    "s",
+                    "r"
+            );
+//        List<String> policyNames = Arrays.asList(
+//                "a_p1",
+//                "a_p2",
+//                "a_p3",
+//                "a_p4",
+//                "a_p5"
+//        );
+        }
 
         for (int i = 0; i < policyNames.size(); i++) {
             String name = policyNames.get(i);

@@ -19,8 +19,8 @@ public class BaseTablesExtractor extends RelVisitor {
         if (node instanceof TableScan) {
             if (!baseTables.contains(node.getTable())){
                 baseTables.add(node.getTable());
-                List<String> name = node.getTable().getQualifiedName();
-                System.out.println(name);
+//                List<String> name = node.getTable().getQualifiedName();
+//                System.out.println(name);
             }
         }
         super.visit(node, ordinal, parent);

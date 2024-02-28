@@ -35,8 +35,8 @@ public class Playground {
         MascaraMaster mascara = new MascaraMaster(connectionProperties);
 
 //         Debug
-//        String queryString = readFile("src/main/resources/queries/tpch/final/q3_c_l_o_final.sql");
-//        mascara.optimalCompliantQuery(queryString, null, null);
+        String queryString = readFile("src/main/resources/queries/efficiency/modify_1.sql");
+        mascara.optimalCompliantQuery(queryString);
 
 
 //        String queriesDir = "src/main/resources/queries/tpch/access";
@@ -47,46 +47,49 @@ public class Playground {
 //        String baseResultsDir = "src/main/resources/results/ranking_plans/filter";
 //        String reportDir = "src/main/resources/compliantQueries/filter";
 
-        String queriesDir = "src/main/resources/queries/tpch/join";
-        String baseResultsDir = "src/main/resources/results/ranking_plans/join";
-        String reportDir = "src/main/resources/compliantQueries/join";
+//        String queriesDir = "src/main/resources/queries/tpch/join";
+//        String baseResultsDir = "src/main/resources/results/ranking_plans/join";
+//        String reportDir = "src/main/resources/compliantQueries/join";
+//        String detailsReportDir = "src/main/resources/reports/join";
 
 //        String queriesDir = "src/main/resources/queries/tpch/final";
 //        String baseResultsDir = "src/main/resources/results/ranking_plans/final";
 //        String reportDir = "src/main/resources/compliantQueries/final";
 
         // Rankings with larger Statistics
-        String resultsDir = baseResultsDir;
+//        String resultsDir = baseResultsDir;
 //        String resultsDir = baseResultsDir.replace("ranking_plans", "ranking_plans_1000");
 //        String resultsDir = baseResultsDir.replace("ranking_plans", "ranking_plans_10000");
 //        String resultsDir = baseResultsDir.replace("ranking_plans", "ranking_plans_base");
 //        String resultsDir = baseResultsDir.replace("ranking_plans", "ranking_plans_base_10000");
 
 
-        Path dir = Paths.get(queriesDir);
-        try {
-            Files.walk(dir)
-                    .filter(Files::isRegularFile)
-                    .forEach(file -> {
-                        String fileName = file.getFileName().toString();
-                        if (fileName.endsWith(".sql")) {
-                            System.out.println("\n----------------------------------------\n");
-                            System.out.println("Starting processing: "+fileName);
-                            String queryString = null;
-                            try {
-                                queryString = readFile(queriesDir+ "/" + fileName);
-                                mascara.optimalCompliantQuery(queryString,
-                                        resultsDir + "/" + fileName.replace(".sql", ".csv"),
-                                        reportDir + "/" + fileName.replace(".sql", ".json"));
-                            } catch (Exception e) {
-                                throw new RuntimeException(e);
-                            }
-                        }
-
-                    });
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+//        Path dir = Paths.get(queriesDir);
+//        try {
+//            Files.walk(dir)
+//                    .filter(Files::isRegularFile)
+//                    .forEach(file -> {
+//                        String fileName = file.getFileName().toString();
+//                        if (fileName.endsWith(".sql")) {
+//                            System.out.println("\n----------------------------------------\n");
+//                            System.out.println("Starting processing: "+fileName);
+//                            String queryString = null;
+//                            try {
+//                                queryString = readFile(queriesDir+ "/" + fileName);
+//                                mascara.optimalCompliantQuery(queryString,
+//                                        resultsDir + "/" + fileName.replace(".sql", ".csv"),
+//                                        reportDir + "/" + fileName.replace(".sql", ".json"),
+//                                        detailsReportDir + "/" + fileName.replace(".sql", ".csv")
+//                                );
+//                            } catch (Exception e) {
+//                                throw new RuntimeException(e);
+//                            }
+//                        }
+//
+//                    });
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
 
     }
 }

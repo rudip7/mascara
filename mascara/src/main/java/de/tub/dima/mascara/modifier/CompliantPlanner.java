@@ -167,6 +167,7 @@ public class CompliantPlanner extends RelVisitor {
             AttributeMapping compliantAttribute;
             for (Integer attr : agg.getArgList()) {
                 compliantAttribute = this.attributeMappings.getCompliantAttribute(attr);
+                // TODO: Convert to aggregable if necessary -> Generalizations
                 if (compliantAttribute != null && compliantAttribute.isAggregable()){
                     operands.add(compliantAttribute.newRef);
                 } else {

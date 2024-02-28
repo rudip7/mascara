@@ -144,11 +144,11 @@ public class AttributeMappings {
     public List<AttributeMapping> getRelevantMappings(){
         List<AttributeMapping> relevantMappings = new ArrayList<>();
         relevantMappings.addAll(this.mappings);
-        for (AttributeMapping mapping : this.filterMappings) {
-            if (stillRelevant(mapping)){
-                relevantMappings.add(mapping);
-            }
-        }
+//        for (AttributeMapping mapping : this.filterMappings) {
+//            if (stillRelevant(mapping)){
+//                relevantMappings.add(mapping);
+//            }
+//        }
         return relevantMappings;
     }
 

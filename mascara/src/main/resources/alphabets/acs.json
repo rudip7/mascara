@@ -1,0 +1,18 @@
+{
+  "public": {
+    "acs_income": {
+      "AGEP" : "integerAlphabet",
+      "COW" : "integerAlphabet",
+      "SCHL" : "integerAlphabet",
+      "MAR" : "integerAlphabet",
+      "OCCP" : "integerAlphabet",
+      "POBP" : "integerAlphabet",
+      "RELP" : "integerAlphabet",
+      "WKHP" : "integerAlphabet",
+      "SEX" : "integerAlphabet",
+      "RAC1P" : "integerAlphabet",
+      "PWGTP" : "integerAlphabet",
+      "PINCP" : "integerAlphabet"
+    }
+  }
+}

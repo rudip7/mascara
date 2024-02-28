@@ -1,0 +1,4 @@
+SELECT AGEP, COW, SCHL, MAR, OCCP, POBP, RELP, WKHP, SEX, RAC1P, PWGTP, PINCP
+FROM acs_income
+where AGEP >= 25.0
+  and SCHL >= 4.0

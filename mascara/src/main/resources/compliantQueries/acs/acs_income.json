@@ -1,0 +1,19 @@
+{
+  "query" : "SELECT AGEP, COW, SCHL, MAR, OCCP, POBP, RELP, WKHP, SEX, RAC1P, PWGTP, PINCP\nFROM acs_income\nwhere AGEP >= 25.0\n  and SCHL >= 4.0",
+  "compliantQueries" : [ {
+    "id" : "a_p1",
+    "compliantQuery" : "SELECT agep AS AGEP, cow AS COW, schl AS SCHL, mar AS MAR, occp AS OCCP, pobp AS POBP, relp AS RELP, wkhp AS WKHP, sex AS SEX, rac1p AS RAC1P, pwgtp AS PWGTP, pincp AS PINCP\r\nFROM public.a_p1\r\nWHERE agep >= bucketize_1(25.0, 5.0) AND schl >= 4.0"
+  }, {
+    "id" : "a_p3",
+    "compliantQuery" : "SELECT agep AS AGEP, cow AS COW, schl AS SCHL, mar AS MAR, occp AS OCCP, pobp AS POBP, relp AS RELP, wkhp AS WKHP, sex AS SEX, rac1p AS RAC1P, pwgtp AS PWGTP, pincp AS PINCP\r\nFROM public.a_p3\r\nWHERE agep >= bucketize_1(25.0, 10.0) AND schl >= 4.0"
+  }, {
+    "id" : "a_p2",
+    "compliantQuery" : "SELECT agep AS AGEP, cow AS COW, schl AS SCHL, mar AS MAR, occp AS OCCP, pobp AS POBP, relp AS RELP, wkhp AS WKHP, sex AS SEX, rac1p AS RAC1P, pwgtp AS PWGTP, pincp AS PINCP\r\nFROM public.a_p2\r\nWHERE agep >= 25.0 AND schl >= bucketize_1(4.0, 2.0)"
+  }, {
+    "id" : "a_p5",
+    "compliantQuery" : "SELECT agep AS AGEP, cow AS COW, schl AS SCHL, mar AS MAR, occp AS OCCP, pobp AS POBP, relp AS RELP, wkhp AS WKHP, sex AS SEX, rac1p AS RAC1P, pwgtp AS PWGTP, pincp AS PINCP\r\nFROM public.a_p5\r\nWHERE agep >= bucketize_1(25.0, 5.0) AND schl >= bucketize_1(4.0, 2.0)"
+  }, {
+    "id" : "a_p4",
+    "compliantQuery" : "SELECT agep AS AGEP, cow AS COW, schl AS SCHL, mar AS MAR, occp AS OCCP, pobp AS POBP, relp AS RELP, wkhp AS WKHP, sex AS SEX, rac1p AS RAC1P, pwgtp AS PWGTP, pincp AS PINCP\r\nFROM public.a_p4\r\nWHERE agep >= 25.0 AND schl >= bucketize_1(4.0, 4.0)"
+  } ]
+}

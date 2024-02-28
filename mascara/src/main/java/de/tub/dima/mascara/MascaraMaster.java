@@ -10,7 +10,6 @@ import de.tub.dima.mascara.parser.Parser;
 import de.tub.dima.mascara.policies.PoliciesCatalog;
 import de.tub.dima.mascara.utils.CompliantQueriesTracker;
 import de.tub.dima.mascara.utils.DebuggingTools;
-import org.apache.avro.mapred.Pair;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
@@ -20,7 +19,7 @@ import org.apache.calcite.sql.SqlNode;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Properties;
 
@@ -33,23 +32,26 @@ public class MascaraMaster {
     public QueryModifier queryModifier;
     public StatisticsManager statsManager;
 
-
     public MascaraMaster(Properties connectionProperties) throws Exception {
+        this(connectionProperties, null);
+    }
+
+    public MascaraMaster(Properties connectionProperties, List<String> policyNames) throws Exception {
         this.maskingFunctionsCatalog = new MaskingFunctionsCatalog();
         this.dbConnector = new DbConnector(connectionProperties, this.maskingFunctionsCatalog);
         this.parser = new Parser(this.dbConnector.calciteConnection, (String) connectionProperties.get("schema"));
         this.statsManager = StatisticsManager.getInstance();
         this.statsManager.setConnector(dbConnector);
-        this.policiesCatalog = new PoliciesCatalog(this.dbConnector, this.parser, this.maskingFunctionsCatalog);
+        this.policiesCatalog = new PoliciesCatalog(this.dbConnector, this.parser, this.maskingFunctionsCatalog, policyNames);
         this.queryModifier = new QueryModifier(this.parser, this.policiesCatalog);
     }
 
 
     public String optimalCompliantQuery(String sql) throws Exception {
-        return optimalCompliantQuery(sql, null, null);
+        return optimalCompliantQuery(sql, null, null, null);
     }
 
-    public String optimalCompliantQuery(String sql, String outputDir, String reportDir) throws Exception {
+    public String optimalCompliantQuery(String sql, String outputDir, String reportDir, String detailedReport) throws Exception {
         System.out.println("[Requested Query]:\n");
         System.out.println(sql);
 
@@ -90,9 +92,35 @@ public class MascaraMaster {
             }
         }
 
+        if(detailedReport != null){
+            try {
+                PrintWriter writer = new PrintWriter(detailedReport, "UTF-8");
+                writer.println("plan_id,utility_score,cardinality_diff,attributes,rel_entropy");
+                for (CompliantPlan plan : compliantPlans) {
+                    writer.println(plan.getId() + "," + plan.getUtilityScore()+ "," + plan.cardinalityDiff + ",\"" + plan.attributes.toString()+ "\",\"" + plan.relEntropy.toString() + "\"");
+                }
+                writer.close();
+            } catch (IOException e) {
+                System.out.println("An error occurred while writing to the file.");
+                e.printStackTrace();
+            }
+        }
+
+
         String compliantQuery = planToSql(compliantPlans.get(0).logicalPlan.rel);
         System.out.println("Optimal Compliant Query: " + compliantQuery);
         return compliantQuery;
+    }
+
+    public List<CompliantPlan> estimateUtilityScores(RelRoot logicalPlan, List<CompliantPlan> compliantPlans) throws SQLException {
+        QualityEstimator qualityEstimator = new QualityEstimator(logicalPlan.rel, dbConnector);
+        for (int i = 0; i < compliantPlans.size(); i++) {
+            CompliantPlan compliantPlan = compliantPlans.get(i);
+            qualityEstimator.estimate(compliantPlan, compliantPlan.queryAttributes);
+//            System.out.println(compliantPlan.getId()+": Total Utility Score: " + compliantPlan.getUtilityScore()+"\n");
+        }
+        compliantPlans.sort((o1, o2) -> o1.getUtilityScore().compareTo(o2.getUtilityScore()));
+        return compliantPlans;
     }
 
     public static String planToSql(RelNode plan){

@@ -4,6 +4,7 @@ import de.tub.dima.mascara.policies.AccessControlPolicy;
 import de.tub.dima.mascara.policies.AttributeMappings;
 import org.apache.calcite.rel.RelRoot;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class CompliantPlan {
@@ -15,6 +16,9 @@ public class CompliantPlan {
     public String id = "";
     public Double utilityScore = Double.MAX_VALUE;
 
+    public Double cardinalityDiff = 0.0;
+    public List<String> attributes = new ArrayList<>();
+    public List<Double> relEntropy = new ArrayList<>();
     public String compliantQuery;
 
     public CompliantPlan(RelRoot logicalPlan, List<AccessControlPolicy> policies, AttributeMappings queryAttributes) {
@@ -46,6 +50,15 @@ public class CompliantPlan {
 
     public void setCompliantQuery(String compliantQuery) {
         this.compliantQuery = compliantQuery;
+    }
+
+    public void addAttributeEntropy(String attribute, Double entropy) {
+        attributes.add(attribute);
+        relEntropy.add(entropy);
+    }
+
+    public void setCardinalityDiff(Double cardinalityDiff) {
+        this.cardinalityDiff = cardinalityDiff;
     }
 
     public String getCompliantQuery() {
