@@ -1,8 +1,8 @@
-package de.tub.dima.mascara.dataMasking.tpch.aggregableFuntions;
+package de.tub.dima.mascara.dataMasking.tpch.transformationFuntions;
 
-import de.tub.dima.mascara.dataMasking.AggregableFunction;
+import de.tub.dima.mascara.dataMasking.TransformationFunction;
 
-public class GetRangeMidpoint extends AggregableFunction {
+public class GetRangeMidpoint extends TransformationFunction {
     public GetRangeMidpoint() {
         this.name = "GET_RANGE_MIDPOINT";
     }

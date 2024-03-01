@@ -1,11 +1,8 @@
 package de.tub.dima.mascara.dataMasking.tpch.maskingFunctions;
 
 import de.tub.dima.mascara.dataMasking.Generalization;
-import de.tub.dima.mascara.dataMasking.MaskingFunction;
-import de.tub.dima.mascara.dataMasking.medical.inverseFunctions.InverseBucketizeAge;
-import de.tub.dima.mascara.dataMasking.tpch.aggregableFuntions.GetRangeMidpoint;
+import de.tub.dima.mascara.dataMasking.tpch.transformationFuntions.GetRangeMidpoint;
 import de.tub.dima.mascara.dataMasking.tpch.inverseFunctions.InverseBucketize;
-import de.tub.dima.mascara.dataMasking.tpch.inverseFunctions.InverseGeneralizeDate;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -16,7 +13,7 @@ public class Bucketize extends Generalization {
         this.name = "BUCKETIZE";
         this.inverseMaskingFunction = new InverseBucketize();
         this.parametrizedInverse = true;
-        this.aggregableFunction = new GetRangeMidpoint();
+        this.transformationFunction = new GetRangeMidpoint();
     }
 
     @Override

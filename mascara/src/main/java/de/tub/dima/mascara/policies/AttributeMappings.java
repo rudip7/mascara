@@ -4,19 +4,20 @@ import de.tub.dima.mascara.optimizer.iqMetadata.AttributeMetadata;
 import de.tub.dima.mascara.optimizer.statistics.AttributeStatistics;
 import org.apache.calcite.rel.core.Aggregate;
 import org.apache.calcite.rel.core.AggregateCall;
-import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.core.TableScan;
 import org.apache.calcite.rel.type.RelDataTypeField;
+import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.util.Pair;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class AttributeMappings {
 
     private List<AttributeMapping> mappings;
+
+    public List<List<AttributeMapping>> relevantAttributes;
 
     public List<AttributeMapping> filterMappings;
 
@@ -24,6 +25,7 @@ public class AttributeMappings {
 
     public AttributeMappings() {
         this.mappings = new ArrayList<>();
+        this.relevantAttributes = new ArrayList<>();
         this.filterMappings = new ArrayList<>();
     }
 
@@ -31,18 +33,21 @@ public class AttributeMappings {
         this.mappings = new ArrayList<>();
         List<RelDataTypeField> fieldList = scan.deriveRowType().getFieldList();
         List<String> fieldNames = scan.deriveRowType().getFieldNames();
+
         for (int i = 0; i < fieldList.size(); i++) {
             RexInputRef inputRef = new RexInputRef(i, fieldList.get(i).getType());
             AttributeMetadata attributeMetadata = new AttributeMetadata(scan.getTable().getQualifiedName(), i, fieldList.get(i).getName());
-            this.mappings.add(new AttributeMapping(attributeMetadata, inputRef, fieldNames.get(i)));
+            AttributeMapping mapping = new AttributeMapping(attributeMetadata, inputRef, fieldNames.get(i));
+            this.mappings.add(mapping);
+            this.relevantAttributes.add(Arrays.asList(mapping));
         }
         this.maxOriginalRef = fieldList.size()-1;
     }
 
-    public void update(Project project){
+    public void update(List<Pair<RexNode, String>> namedProjects){
         // TODO: Consider missing attributes as suppressed
         List<AttributeMapping> newAttributeMappings = new ArrayList<>();
-        List<Pair<RexNode, String>> namedProjects = project.getNamedProjects();
+        List<List<AttributeMapping>> newRelevantAttributes = new ArrayList<>();
         int newIdx = 0;
         for (int i = 0; i < namedProjects.size(); i++) {
             Pair<RexNode, String> namedProject = namedProjects.get(i);
@@ -51,11 +56,36 @@ public class AttributeMappings {
                 AttributeMapping attributeMapping = getCompliantAttribute((RexInputRef) namedProject.left);
                 newAttributeMappings.add(attributeMapping.project(i, newIdx, namedProject.right));
                 newIdx++;
+                newRelevantAttributes.add(relevantAttributes.get(attributeMapping.newRef.getIndex()));
+
+            } else if (namedProject.left instanceof RexCall){
+                List<AttributeMapping> callMappings = new ArrayList<>();
+                collectMappings((RexCall) namedProject.left, callMappings);
+                RexInputRef originalRef = new RexInputRef(i, namedProject.left.getType());
+                RexInputRef newRef = new RexInputRef(newIdx, namedProject.left.getType());
+                AttributeMapping mapping = new AttributeMapping(originalRef, newRef, namedProject.right);
+                newAttributeMappings.add(mapping);
+                newRelevantAttributes.add(callMappings);
+                newIdx++;
             } else {
-                throw new RuntimeException("Queries with generalized projection are not supported yet.");
+                throw new RuntimeException("Case not supported yet.");
             }
         }
         this.mappings = newAttributeMappings;
+        this.relevantAttributes = newRelevantAttributes;
+    }
+
+    private void collectMappings(RexCall call, List<AttributeMapping> callMappings) {
+        for (RexNode operand : call.operands) {
+            if (operand instanceof RexInputRef) {
+                RexInputRef projected = (RexInputRef) operand;
+                AttributeMapping mapping = getCompliantAttribute(projected);
+                callMappings.addAll(relevantAttributes.get(mapping.newRef.getIndex()));
+            } else if (operand instanceof RexCall) {
+                collectMappings((RexCall) operand, callMappings);
+            }
+        }
+
     }
 
     public void update(Aggregate aggregate){
@@ -85,6 +115,12 @@ public class AttributeMappings {
     }
 
     public boolean add(AttributeMapping mapping){
+        this.relevantAttributes.add(Arrays.asList(mapping));
+        return this.mappings.add(mapping);
+    }
+
+    public boolean addWithRelevant(AttributeMapping mapping, List<AttributeMapping> relevant) {
+        this.relevantAttributes.add(relevant);
         return this.mappings.add(mapping);
     }
 
@@ -106,6 +142,16 @@ public class AttributeMappings {
         return null;
     }
 
+    public Pair<AttributeMapping, List<AttributeMapping>> getCompliantAttributeWithRelevants(RexInputRef required) {
+        for (int i = 0; i < this.mappings.size(); i++) {
+            AttributeMapping mapping = this.mappings.get(i);
+            if (mapping.originalRef.equals(required)) {
+                return new Pair<>(mapping, this.relevantAttributes.get(i));
+            }
+        }
+        return null;
+    }
+
     public AttributeMapping getCompliantAttribute(int requiredIndex){
         for (AttributeMapping mapping:
                 this.mappings) {
@@ -115,6 +161,8 @@ public class AttributeMappings {
         }
         return null;
     }
+
+
 
     public AttributeMappings combineAttributeMappings(AttributeMappings other){
         AttributeMappings combinedMappings = new AttributeMappings();
@@ -143,7 +191,10 @@ public class AttributeMappings {
 
     public List<AttributeMapping> getRelevantMappings(){
         List<AttributeMapping> relevantMappings = new ArrayList<>();
-        relevantMappings.addAll(this.mappings);
+        for(List<AttributeMapping> mappings : this.relevantAttributes){
+            relevantMappings.addAll(mappings);
+        }
+//        relevantMappings.addAll(this.mappings);
 //        for (AttributeMapping mapping : this.filterMappings) {
 //            if (stillRelevant(mapping)){
 //                relevantMappings.add(mapping);
@@ -163,6 +214,7 @@ public class AttributeMappings {
         return true;
     }
 
+
     @Override
     public AttributeMappings clone() {
         AttributeMappings clonedMappings = new AttributeMappings();
@@ -176,4 +228,7 @@ public class AttributeMappings {
         clonedMappings.setMaxOriginalRef(this.maxOriginalRef);
         return clonedMappings;
     }
+
+
+
 }

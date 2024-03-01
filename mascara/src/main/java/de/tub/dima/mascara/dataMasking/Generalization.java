@@ -6,7 +6,7 @@ public abstract class Generalization extends MaskingFunction{
     public boolean aggregable = false;
     public InverseMaskingFunction inverseMaskingFunction = null;
 
-    public AggregableFunction aggregableFunction = null;
+    public TransformationFunction transformationFunction = null;
 
     public boolean parametrizedInverse = false;
 
@@ -14,8 +14,8 @@ public abstract class Generalization extends MaskingFunction{
         return aggregable;
     }
 
-    public AggregableFunction getAggregableFunction() {
-        return aggregableFunction;
+    public TransformationFunction getTransformationFunction() {
+        return transformationFunction;
     }
 
     public boolean hasParametrizedInverse() {

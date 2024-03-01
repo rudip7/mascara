@@ -2,7 +2,6 @@ package de.tub.dima.mascara.policies;
 
 import de.tub.dima.mascara.dataMasking.Generalization;
 import de.tub.dima.mascara.dataMasking.MaskingFunction;
-import de.tub.dima.mascara.dataMasking.Perturbation;
 import de.tub.dima.mascara.optimizer.iqMetadata.AttributeMetadata;
 import de.tub.dima.mascara.optimizer.statistics.AttributeStatistics;
 import org.apache.calcite.rel.type.RelDataType;
@@ -24,6 +23,7 @@ public class AttributeMapping {
     public RexCall maskedRexCall;
     public MaskingFunction maskingFunction;
     public boolean aggregate = false;
+    public boolean dataTypeChanged = false;
 
     public AttributeMapping(AttributeMetadata originalAttribute, RexInputRef originalRef, AttributeMetadata compliantAttribute, RexInputRef newRef, String name, boolean masked, RexCall maskedRexCall, MaskingFunction maskingFunction) {
         if (masked && (maskedRexCall == null || compliantAttribute == null)){
@@ -37,7 +37,7 @@ public class AttributeMapping {
         this.masked = masked;
         this.maskedRexCall = maskedRexCall;
         this.maskingFunction = maskingFunction;
-
+        this.dataTypeChanged = masked && (maskingFunction != null && maskingFunction instanceof Generalization);
     }
 
     public AttributeMapping(AttributeMetadata originalAttribute, RexInputRef originalRef, RexInputRef newRef, String name) {
@@ -68,7 +68,16 @@ public class AttributeMapping {
     }
 
     public boolean dataTypeChanged() {
-        return masked && (maskingFunction != null && maskingFunction instanceof Generalization);
+        return dataTypeChanged;
+    }
+
+    public void setOriginalDatatype() {
+        dataTypeChanged = false;
+        newRef = new RexInputRef(newRef.getIndex(), originalRef.getType());
+    }
+
+    public boolean transformationAvailable(){
+        return ((Generalization) maskingFunction).getTransformationFunction() != null;
     }
 
     public RexCall maskValue(RexNode literal, RelBuilder builder){
@@ -87,7 +96,7 @@ public class AttributeMapping {
     }
 
     public RelDataType getType(){
-        if (masked){
+        if (dataTypeChanged && masked){
             return maskedRexCall.getType();
         }
         return originalRef.getType();
@@ -112,7 +121,11 @@ public class AttributeMapping {
         return new AttributeMapping(this.originalAttribute, originalRef, this.compliantAttribute, newRef, this.name, this.masked, this.maskedRexCall, this.maskingFunction);
     }
     public boolean isAggregable(){
-        return !this.isMasked() || this.maskingFunction instanceof Perturbation || (this.maskingFunction instanceof Generalization && ((Generalization) this.maskingFunction).isAggregable());
+        return !isGeneralization() || ((Generalization) this.maskingFunction).getTransformationFunction() != null;
+    }
+
+    public boolean isGeneralization(){
+        return this.isMasked() && this.maskingFunction instanceof Generalization;
     }
 
     public void setAggregate() {

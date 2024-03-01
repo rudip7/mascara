@@ -4,6 +4,7 @@ import de.tub.dima.mascara.utils.DebuggingTools;
 import org.apache.calcite.config.CalciteConnectionConfig;
 import org.apache.calcite.jdbc.CalciteConnection;
 import org.apache.calcite.plan.volcano.VolcanoPlanner;
+import org.apache.calcite.prepare.PlannerImpl;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelRoot;
 import org.apache.calcite.schema.SchemaPlus;
@@ -40,11 +41,12 @@ public class Parser {
                 .defaultSchema(connection.getRootSchema().getSubSchema(defaultSchema))
                 .build();
 
-
-
         this.planner = Frameworks.getPlanner(frameworkConfig);
 
+
+
         this.schema = connection.getRootSchema();
+
     }
 
     public static SqlParser.Config  getParserConfig(CalciteConnectionConfig config){

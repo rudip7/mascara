@@ -14,6 +14,7 @@ import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
@@ -32,10 +33,10 @@ public class Playground {
         connectionProperties.put("password", "1902");
         connectionProperties.put("schema", "public");
 
-        MascaraMaster mascara = new MascaraMaster(connectionProperties);
+        MascaraMaster mascara = new MascaraMaster(connectionProperties, Arrays.asList("l_p1"));
 
 //         Debug
-        String queryString = readFile("src/main/resources/queries/efficiency/modify_1.sql");
+        String queryString = readFile("src/main/resources/queries/tpch/aggregate/test.sql");
         mascara.optimalCompliantQuery(queryString);
 
 

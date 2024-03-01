@@ -4,11 +4,9 @@ import de.tub.dima.mascara.CompliantPlan;
 import de.tub.dima.mascara.parser.Parser;
 import de.tub.dima.mascara.policies.AccessControlPolicy;
 import de.tub.dima.mascara.policies.PoliciesCatalog;
-import de.tub.dima.mascara.utils.DebuggingTools;
 import org.apache.calcite.plan.RelOptTable;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.RelRoot;
-import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.tools.RelBuilder;
 
 import java.util.ArrayList;
@@ -41,7 +39,7 @@ public class QueryModifier {
             
             if (compliantPlan != null){
 //                DebuggingTools.printPlan("[Compliant plan]:", compliantPlan);
-                compliantPlans.add(new CompliantPlan(RelRoot.of(compliantPlan, logicalPlan.kind), new ArrayList<>(policies.values()), compliantPlanner.getQueryAttributes()));
+                compliantPlans.add(new CompliantPlan(RelRoot.of(compliantPlan, logicalPlan.kind), new ArrayList<>(policies.values()), compliantPlanner.getAttributeMapping()));
             }
         }
         return compliantPlans;

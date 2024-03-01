@@ -1,6 +1,6 @@
 package de.tub.dima.mascara.dataMasking;
 
-public abstract class AggregableFunction {
+public abstract class TransformationFunction {
     public String name;
 
     public String getName() {
@@ -8,7 +8,7 @@ public abstract class AggregableFunction {
     }
 
     @Override
-    public AggregableFunction clone(){
+    public TransformationFunction clone(){
         return this;
     }
 }

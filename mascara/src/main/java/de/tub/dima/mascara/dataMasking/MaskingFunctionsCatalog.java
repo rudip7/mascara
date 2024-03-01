@@ -8,6 +8,7 @@ import de.tub.dima.mascara.dataMasking.medical.maskingFunctions.*;
 import de.tub.dima.mascara.dataMasking.tpch.maskingFunctions.*;
 import de.tub.dima.mascara.dataMasking.tpch.maskingFunctions.AddRelativeNoise;
 import de.tub.dima.mascara.dataMasking.tpch.maskingFunctions.BlurPhone;
+import de.tub.dima.mascara.dataMasking.tpch.transformationFuntions.GetRangeMidpoint;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.impl.ScalarFunctionImpl;
 
@@ -17,6 +18,8 @@ import java.util.List;
 public class MaskingFunctionsCatalog {
 
     public List<MaskingFunction> maskingFunctions;
+
+    public List<TransformationFunction> transformationFunctions;
 
     public List<InverseMaskingFunction> inverseMaskingFunctions;
 
@@ -45,12 +48,19 @@ public class MaskingFunctionsCatalog {
                 this.inverseMaskingFunctions.add(((Generalization) maskingFunction).getInverseMaskingFunction());
             }
         }
+
+        this.transformationFunctions = new ArrayList<>();
+        this.transformationFunctions.add(new GetRangeMidpoint());
     }
 
     public void addToSchema(SchemaPlus schema){
         for (MaskingFunction function : maskingFunctions) {
             schema.add(function.name, ScalarFunctionImpl.create(function.getClass(), "eval"));
         }
+        for (TransformationFunction function : transformationFunctions) {
+            schema.add(function.name, ScalarFunctionImpl.create(function.getClass(), "eval"));
+        }
+
     }
 
     public MaskingFunction getMaskingFunctionByName(String name){
