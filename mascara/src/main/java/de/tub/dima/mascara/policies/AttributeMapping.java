@@ -2,15 +2,23 @@ package de.tub.dima.mascara.policies;
 
 import de.tub.dima.mascara.dataMasking.Generalization;
 import de.tub.dima.mascara.dataMasking.MaskingFunction;
+import de.tub.dima.mascara.dataMasking.TransformationFunction;
 import de.tub.dima.mascara.optimizer.iqMetadata.AttributeMetadata;
 import de.tub.dima.mascara.optimizer.statistics.AttributeStatistics;
+import org.apache.calcite.prepare.CalciteCatalogReader;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexNode;
+import org.apache.calcite.schema.ScalarFunction;
+import org.apache.calcite.schema.impl.ScalarFunctionImpl;
+import org.apache.calcite.sql.SqlIdentifier;
+import org.apache.calcite.sql.SqlOperator;
+import org.apache.calcite.sql.parser.SqlParserPos;
 import org.apache.calcite.tools.RelBuilder;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class AttributeMapping {
@@ -170,5 +178,14 @@ public class AttributeMapping {
         clonedMapping.aggregate = this.aggregate;
 
         return clonedMapping;
+    }
+
+    public RexNode getTransformedRef(RelBuilder builder) {
+        TransformationFunction transformationFunction = ((Generalization) maskingFunction).getTransformationFunction();
+        ScalarFunction function = ScalarFunctionImpl.create(transformationFunction.getClass(), "eval");
+        SqlIdentifier sqlIdentifier = new SqlIdentifier(Arrays.asList(transformationFunction.getName().toLowerCase()), null, SqlParserPos.ZERO, null);
+        SqlOperator op = CalciteCatalogReader.toOp(sqlIdentifier, function);
+        RexNode transformed = builder.call(op, new RexInputRef(this.newRef.getIndex(), this.originalRef.getType()));
+        return transformed;
     }
 }

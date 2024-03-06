@@ -51,8 +51,8 @@ public class AlphabetCatalog {
         this.alphabets.put("phoneAlphabet", phoneAlphabet);
 
 
-//        fromJSON("src/main/resources/alphabets/tpch.json");
-        fromJSON("src/main/resources/alphabets/acs.json");
+        fromJSON("src/main/resources/alphabets/tpch.json");
+//        fromJSON("src/main/resources/alphabets/acs.json");
     }
 
     public void fromJSON(String jsonFilePath){

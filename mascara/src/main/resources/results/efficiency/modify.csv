@@ -1,6 +1,0 @@
-"Benchmark","Mode","Threads","Samples","Score","Score Error (99.9%)","Unit","Param: configuration"
-"de.tub.dima.mascara.EfficiencyModificationCombination.benchmarkModify","avgt",1,5,41.146163,42.607748,"ms/op",pol_32
-"de.tub.dima.mascara.EfficiencyModificationCombination.benchmarkModify","avgt",1,5,31.732792,26.518483,"ms/op",pol_16
-"de.tub.dima.mascara.EfficiencyModificationCombination.benchmarkModify","avgt",1,5,21.747092,7.950562,"ms/op",pol_8
-"de.tub.dima.mascara.EfficiencyModificationCombination.benchmarkModify","avgt",1,5,9.985913,2.689462,"ms/op",pol_4
-"de.tub.dima.mascara.EfficiencyModificationCombination.benchmarkModify","avgt",1,5,8.216714,1.496831,"ms/op",pol_2

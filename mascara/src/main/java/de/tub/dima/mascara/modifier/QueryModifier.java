@@ -20,12 +20,13 @@ public class QueryModifier {
     public RelBuilder builder;
     public QueryModifier(Parser parser, PoliciesCatalog policiesCatalog) {
         this.parser = parser;
-        this.policySelector = new PolicySelector(policiesCatalog);
+        this.policySelector = new PolicySelector(policiesCatalog, parser.getFrameworkConfig());
         this.builder = RelBuilder.create(parser.getFrameworkConfig());
     }
 
     public List<CompliantPlan> getCompliantPlans(RelRoot logicalPlan){
         HashMap<RelOptTable, List<AccessControlPolicy>> candidatePolicies = policySelector.selectCandidatePolicies(logicalPlan);
+
 
         // TODO maybe RelNode instead of RelRoot
         ArrayList<CompliantPlan> compliantPlans = new ArrayList<>();
@@ -39,7 +40,7 @@ public class QueryModifier {
             
             if (compliantPlan != null){
 //                DebuggingTools.printPlan("[Compliant plan]:", compliantPlan);
-                compliantPlans.add(new CompliantPlan(RelRoot.of(compliantPlan, logicalPlan.kind), new ArrayList<>(policies.values()), compliantPlanner.getAttributeMapping()));
+                compliantPlans.add(new CompliantPlan(RelRoot.of(compliantPlan, logicalPlan.kind), new ArrayList<>(policies.values()), compliantPlanner.getAttributeMapping(), RelRoot.of(compliantPlanner.cardinalityPlan, logicalPlan.kind)));
             }
         }
         return compliantPlans;

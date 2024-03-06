@@ -55,6 +55,18 @@ public class DbConnector {
         this.jdbcConnection = DriverManager.getConnection(connectionProperties.getProperty("url"), connectionProperties);
     }
 
+    public boolean executeQuery(String query){
+        try (Statement stmt = jdbcConnection.createStatement()) {
+            ResultSet rs = stmt.executeQuery(query);
+            while (rs.next()) {}
+//            stmt.execute(query);
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public TableStatistics getStatistics(List<String> tableName, long size) throws SQLException {
         TableStatistics tableStatistics = new TableStatistics(tableName, size);
         String query = "SELECT attname, n_distinct, most_common_vals::text::text[] as most_common_vals, most_common_freqs, histogram_bounds::text::text[] as histogram_bounds FROM pg_stats WHERE tablename='"+tableName.get(tableName.size()-1)+"'";

@@ -33,11 +33,12 @@ public class Playground {
         connectionProperties.put("password", "1902");
         connectionProperties.put("schema", "public");
 
-        MascaraMaster mascara = new MascaraMaster(connectionProperties, Arrays.asList("l_p1"));
+        MascaraMaster mascara = new MascaraMaster(connectionProperties);
 
 //         Debug
-        String queryString = readFile("src/main/resources/queries/tpch/aggregate/test.sql");
-        mascara.optimalCompliantQuery(queryString);
+        String queryString = readFile("src/main/resources/queries/tpch/aggregate/q10.sql");
+        String optimalCompliantQuery = mascara.optimalCompliantQuery(queryString);
+        mascara.executeQuery(optimalCompliantQuery);
 
 
 //        String queriesDir = "src/main/resources/queries/tpch/access";

@@ -123,10 +123,19 @@ public class MascaraMaster {
         return compliantPlans;
     }
 
+    public String getCompliantQuery(RelRoot logicalPlan, List<CompliantPlan> compliantPlans) throws SQLException {
+        estimateUtilityScores(logicalPlan, compliantPlans);
+        return planToSql(compliantPlans.get(0).logicalPlan.rel);
+    }
+
     public static String planToSql(RelNode plan){
         SqlDialect sqlDialect = new SqlDialect(SqlDialect.EMPTY_CONTEXT);
         SqlNode sqlNode = new RelToSqlConverter(sqlDialect).visitRoot(plan).asStatement();
-        return sqlNode.toSqlString(sqlDialect).getSql();
+        return sqlNode.toSqlString(sqlDialect).getSql().replace("$", "S");
+    }
+
+    public boolean executeQuery(String sql) throws SQLException {
+        return dbConnector.executeQuery(sql);
     }
 
     public void collectStatistics(){

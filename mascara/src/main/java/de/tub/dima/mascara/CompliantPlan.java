@@ -21,7 +21,9 @@ public class CompliantPlan {
     public List<Double> relEntropy = new ArrayList<>();
     public String compliantQuery;
 
-    public CompliantPlan(RelRoot logicalPlan, List<AccessControlPolicy> policies, AttributeMappings queryAttributes) {
+    public String cardinalityQuery;
+
+    public CompliantPlan(RelRoot logicalPlan, List<AccessControlPolicy> policies, AttributeMappings queryAttributes, RelRoot cardinalityPlan) {
         this.logicalPlan = logicalPlan;
         this.policies = policies;
         this.queryAttributes = queryAttributes;
@@ -34,6 +36,7 @@ public class CompliantPlan {
             }
         }
         this.compliantQuery = MascaraMaster.planToSql(logicalPlan.rel);
+        this.cardinalityQuery = MascaraMaster.planToSql(cardinalityPlan.rel);
     }
 
     public String getId() {
@@ -67,4 +70,10 @@ public class CompliantPlan {
         }
         return compliantQuery;
     }
+
+    public String getCardinalityQuery() {
+        return cardinalityQuery;
+    }
+
+
 }

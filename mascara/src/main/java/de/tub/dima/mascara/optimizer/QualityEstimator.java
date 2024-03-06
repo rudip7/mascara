@@ -12,6 +12,7 @@ import de.tub.dima.mascara.optimizer.statistics.*;
 import de.tub.dima.mascara.policies.AttributeMapping;
 import de.tub.dima.mascara.policies.AttributeMappings;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.Project;
 import org.apache.calcite.rel.rel2sql.RelToSqlConverter;
 import org.apache.calcite.sql.SqlNode;
 import org.apache.calcite.sql.SqlDialect;
@@ -30,9 +31,23 @@ public class QualityEstimator {
         this.dbConnector = dbConnector;
         this.originalPlan = originalPlan;
 
-        String query = MascaraMaster.planToSql(originalPlan);
-        originalCardinality = dbConnector.estimateCardinality(query);
+//        String query = MascaraMaster.planToSql(originalPlan);
+        String cardinalityQuery = convertToCardinalityQuery(originalPlan);
+        originalCardinality = dbConnector.estimateCardinality(cardinalityQuery);
 
+    }
+
+    public String convertToCardinalityQuery(RelNode originalPlan){
+        RelNode cardinalityPlan = originalPlan;
+
+        while (cardinalityPlan.getInputs().size() > 0){
+            if (cardinalityPlan instanceof Project){
+                break;
+            } else {
+                cardinalityPlan = cardinalityPlan.getInput(0);
+            }
+        }
+        return MascaraMaster.planToSql(cardinalityPlan);
     }
 
     public double estimate(CompliantPlan plan, AttributeMappings queryMappings) throws SQLException {
@@ -40,9 +55,9 @@ public class QualityEstimator {
         for (AttributeMapping mapping : queryMappings.getRelevantMappings()){
             if (mapping.isMasked()){
                 double attributeRelativeEntropy = 0.0;
-//                if (mapping.getCompliantStats().getRelativeEntropy() >= 0.0){
-//                    attributeRelativeEntropy = mapping.getCompliantStats().getRelativeEntropy();
-//                } else
+                if (mapping.getCompliantStats().getRelativeEntropy() >= 0.0){
+                    attributeRelativeEntropy = mapping.getCompliantStats().getRelativeEntropy();
+                } else
                 if (mapping.getCompliantStats() instanceof SuppressedAttributeStatistics && ((SuppressedAttributeStatistics) mapping.getCompliantStats()).isStillSuppressed()){
                     attributeRelativeEntropy = estimateRelativeEntropySuppressed(mapping.getOriginalStats(), mapping.getCompliantStats());
                 } else if (mapping.getOriginalStats() instanceof DiscretizedStatistics){
@@ -58,7 +73,7 @@ public class QualityEstimator {
             }
         }
 
-        Long compliantCardinality = dbConnector.estimateCardinality(plan.getCompliantQuery());
+        Long compliantCardinality = dbConnector.estimateCardinality(plan.getCardinalityQuery());
         plan.setCardinalityDiff(Math.abs(originalCardinality - compliantCardinality)/ originalCardinality);
 
         double penaltyFactor = (Math.abs(originalCardinality - compliantCardinality) / originalCardinality) + 1.0;

@@ -152,6 +152,16 @@ public class AttributeMappings {
         return null;
     }
 
+    public Pair<AttributeMapping, List<AttributeMapping>> getCompliantAttributeWithRelevants(int requiredIndex) {
+        for (int i = 0; i < this.mappings.size(); i++) {
+            AttributeMapping mapping = this.mappings.get(i);
+            if (mapping.originalRef.getIndex() == requiredIndex) {
+                return new Pair<>(mapping, this.relevantAttributes.get(i));
+            }
+        }
+        return null;
+    }
+
     public AttributeMapping getCompliantAttribute(int requiredIndex){
         for (AttributeMapping mapping:
                 this.mappings) {
