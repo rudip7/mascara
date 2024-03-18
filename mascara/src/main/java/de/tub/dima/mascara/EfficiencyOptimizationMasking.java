@@ -64,6 +64,7 @@ public class EfficiencyOptimizationMasking {
                 .include(EfficiencyOptimizationMasking.class.getSimpleName())
                 .resultFormat(ResultFormatType.CSV)  // Set result format to CSV
                 .result("src/main/resources/results/efficiency/optimization_masking.csv")
+//                .result("src/main/resources/results/efficiency/optimization_masking_10000.csv")
                 .build();
 
         new Runner(opt).run();
@@ -73,9 +74,11 @@ public class EfficiencyOptimizationMasking {
     private String configuration;
 
     @Benchmark
-    @Fork(value = 1, warmups = 1)
-    @Warmup(iterations = 10, time = 200, timeUnit = TimeUnit.MILLISECONDS)
-    @Measurement(iterations = 20, time = 200, timeUnit = TimeUnit.MILLISECONDS)
+    @Fork(value = 1)
+//    @Warmup(iterations = 10, time = 200, timeUnit = TimeUnit.MILLISECONDS)
+//    @Measurement(iterations = 20, time = 200, timeUnit = TimeUnit.MILLISECONDS)
+    @Warmup(iterations = 5, time = 1, timeUnit = TimeUnit.NANOSECONDS)
+    @Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.NANOSECONDS)
     public List<CompliantPlan> benchmarkEstimate() throws Exception {
         RelRoot logicalPlan = logicalPlans.get(configuration);
         List<CompliantPlan> compliantPlan = compliantPlans.get(configuration);

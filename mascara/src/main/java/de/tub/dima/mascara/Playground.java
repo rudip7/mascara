@@ -1,5 +1,6 @@
 package de.tub.dima.mascara;
 
+import de.tub.dima.mascara.optimizer.statistics.StatisticsManager;
 import de.tub.dima.mascara.parser.Parser;
 import de.tub.dima.mascara.utils.DebuggingTools;
 import org.apache.calcite.rel.RelNode;
@@ -37,8 +38,26 @@ public class Playground {
 
 //         Debug
         String queryString = readFile("src/main/resources/queries/tpch/aggregate/q10.sql");
-        String optimalCompliantQuery = mascara.optimalCompliantQuery(queryString);
-        mascara.executeQuery(optimalCompliantQuery);
+////        String queryString = readFile("src/main/resources/queries/tpch/final/q3_c_l_o_final.sql");
+//        RelRoot logicalPlan = mascara.getLogicalPlan(queryString);
+//        List<CompliantPlan> modifiedQueries = mascara.modify(logicalPlan);
+//        List<CompliantPlan> compliantQueries = mascara.estimateUtilityScores(logicalPlan, modifiedQueries);
+//
+//        CompliantPlan optimalQuery = compliantQueries.get(0);
+//        System.out.println("-----------------------------");
+//        System.out.println(optimalQuery.getId());
+//        System.out.println(optimalQuery.getCardinalityQuery());
+
+        mascara.parser.getLogicalPlanDebugging(queryString);
+
+
+
+
+
+
+//        String compliantQueryDynamic = mascara.getCompliantQueryDynamic(logicalPlan, modifiedQueries);
+//        System.out.printf(compliantQueryDynamic);
+//        mascara.executeQuery(compliantQueryDynamic);
 
 
 //        String queriesDir = "src/main/resources/queries/tpch/access";

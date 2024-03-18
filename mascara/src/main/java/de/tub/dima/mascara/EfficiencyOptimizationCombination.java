@@ -96,7 +96,8 @@ public class EfficiencyOptimizationCombination {
         Options opt = new OptionsBuilder()
                 .include(EfficiencyOptimizationCombination.class.getSimpleName())
                 .resultFormat(ResultFormatType.CSV)  // Set result format to CSV
-                .result("src/main/resources/results/efficiency/optimization_combinations.csv")
+//                .result("src/main/resources/results/efficiency/optimization_combinations.csv")
+                .result("src/main/resources/results/efficiency/optimization_combinations_10000.csv")
                 .build();
 
         new Runner(opt).run();
@@ -106,9 +107,11 @@ public class EfficiencyOptimizationCombination {
     private String configuration;
 
     @Benchmark
-    @Fork(value = 1, warmups = 1)
-    @Warmup(iterations = 5, time = 200, timeUnit = TimeUnit.MILLISECONDS)
-    @Measurement(iterations = 10, time = 200, timeUnit = TimeUnit.MILLISECONDS)
+    @Fork(value = 1)
+//    @Warmup(iterations = 5, time = 200, timeUnit = TimeUnit.MILLISECONDS)
+//    @Measurement(iterations = 10, time = 200, timeUnit = TimeUnit.MILLISECONDS)
+    @Warmup(iterations = 5)
+    @Measurement(iterations = 5)
     public List<CompliantPlan> benchmarkEstimate() throws Exception {
         MascaraMaster mascara = mascaraMap.get(configuration);
         RelRoot logicalPlan = logicalPlans.get(configuration);

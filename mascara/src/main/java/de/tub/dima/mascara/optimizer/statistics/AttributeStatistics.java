@@ -318,4 +318,8 @@ public class AttributeStatistics implements Cloneable{
     public void setRelativeEntropy(double relativeEntropy) {
         this.relativeEntropy = relativeEntropy;
     }
+
+    public void resetEntropy() {
+        relativeEntropy = -1.0;
+    }
 }

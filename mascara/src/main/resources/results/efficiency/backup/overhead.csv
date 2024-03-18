@@ -1,0 +1,21 @@
+"Benchmark","Mode","Threads","Samples","Score","Score Error (99,9%)","Unit","Param: configuration"
+"de.tub.dima.mascara.EfficiencyOverhead.benchmarkEstimate","avgt",1,20,"3,062755","0,272275","ms/op",q1
+"de.tub.dima.mascara.EfficiencyOverhead.benchmarkEstimate","avgt",1,20,"19,038411","0,798552","ms/op",q3
+"de.tub.dima.mascara.EfficiencyOverhead.benchmarkEstimate","avgt",1,20,"27,985393","2,811300","ms/op",q5
+"de.tub.dima.mascara.EfficiencyOverhead.benchmarkEstimate","avgt",1,20,"3,900160","0,593113","ms/op",q6
+"de.tub.dima.mascara.EfficiencyOverhead.benchmarkEstimate","avgt",1,20,"22,615238","1,258302","ms/op",q10
+"de.tub.dima.mascara.EfficiencyOverhead.benchmarkExecuting","avgt",1,20,"1460,890300","8,041698","ms/op",q1
+"de.tub.dima.mascara.EfficiencyOverhead.benchmarkExecuting","avgt",1,20,"266,124325","10,663882","ms/op",q3
+"de.tub.dima.mascara.EfficiencyOverhead.benchmarkExecuting","avgt",1,20,"307,451455","7,777524","ms/op",q5
+"de.tub.dima.mascara.EfficiencyOverhead.benchmarkExecuting","avgt",1,20,"193,938900","8,129014","ms/op",q6
+"de.tub.dima.mascara.EfficiencyOverhead.benchmarkExecuting","avgt",1,20,"419,331525","7,785154","ms/op",q10
+"de.tub.dima.mascara.EfficiencyOverhead.benchmarkExecutingCompliant","avgt",1,20,"1460,662860","36,359461","ms/op",q1
+"de.tub.dima.mascara.EfficiencyOverhead.benchmarkExecutingCompliant","avgt",1,20,"1665,689900","164,127551","ms/op",q3
+"de.tub.dima.mascara.EfficiencyOverhead.benchmarkExecutingCompliant","avgt",1,20,"206,549995","4,826102","ms/op",q5
+"de.tub.dima.mascara.EfficiencyOverhead.benchmarkExecutingCompliant","avgt",1,20,"165,633935","4,838136","ms/op",q6
+"de.tub.dima.mascara.EfficiencyOverhead.benchmarkExecutingCompliant","avgt",1,20,"486,136570","16,849217","ms/op",q10
+"de.tub.dima.mascara.EfficiencyOverhead.benchmarkModify","avgt",1,20,"4,749299","0,662093","ms/op",q1
+"de.tub.dima.mascara.EfficiencyOverhead.benchmarkModify","avgt",1,20,"13,685614","1,594145","ms/op",q3
+"de.tub.dima.mascara.EfficiencyOverhead.benchmarkModify","avgt",1,20,"51,450839","11,473950","ms/op",q5
+"de.tub.dima.mascara.EfficiencyOverhead.benchmarkModify","avgt",1,20,"3,111203","0,529731","ms/op",q6
+"de.tub.dima.mascara.EfficiencyOverhead.benchmarkModify","avgt",1,20,"15,557882","3,178078","ms/op",q10

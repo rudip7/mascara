@@ -30,10 +30,12 @@ public class AccessControlPolicy {
     public AttributeMappings attributeMappings;
     public TableStatistics policyStats;
     public TableStatistics originalStats;
+    public String policySql;
 
 
 
     public AccessControlPolicy(String policySql, List<String> policyName, Parser parser, MaskingFunctionsCatalog maskingFunctionsCatalog) throws Exception {
+        this.policySql = policySql;
         this.attributeMappings = new AttributeMappings();
         this.policyName = policyName;
         this.logicalPlan = parser.getLogicalPlan(policySql);
@@ -150,6 +152,17 @@ public class AccessControlPolicy {
         return policyName;
     }
 
+    public String getPathName() {
+        StringBuilder nameBuilder = new StringBuilder();
+        for (String name : this.policyName){
+            nameBuilder.append(name).append(".");
+        }
+        nameBuilder.deleteCharAt(nameBuilder.length()-1);
+        return nameBuilder.toString();
+    }
+    
+    
+
 
 
     public void setStatistics(){
@@ -177,4 +190,13 @@ public class AccessControlPolicy {
         indexOriginalStats();
         indexProtectedStats();
     }
+
+    public String getPolicySql() {
+        return policySql;
+    }
+
+    public String getPolicySqlForDynamic() {
+        return "(" + this.policySql + ") AS " + policyName.get(policyName.size()-1);
+    }
+    
 }

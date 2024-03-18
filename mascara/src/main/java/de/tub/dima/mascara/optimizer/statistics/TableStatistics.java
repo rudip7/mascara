@@ -69,4 +69,10 @@ public class TableStatistics {
             stat.setSize(size);
         }
     }
+
+    public void resetEntropies() {
+        for (AttributeStatistics stat : attributeStatistics.values()) {
+            stat.resetEntropy();
+        }
+    }
 }

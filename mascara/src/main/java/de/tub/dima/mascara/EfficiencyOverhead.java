@@ -1,5 +1,6 @@
 package de.tub.dima.mascara;
 
+import de.tub.dima.mascara.optimizer.statistics.StatisticsManager;
 import org.apache.calcite.rel.RelRoot;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.results.format.ResultFormatType;
@@ -24,7 +25,6 @@ public class EfficiencyOverhead {
 
     private Map<String, List<CompliantPlan>> compliantPlans;
 
-    private Map<String, String> compliantqueries;
 
     @Setup
     public void setup() throws Exception {
@@ -46,7 +46,6 @@ public class EfficiencyOverhead {
         mascaraMap.put("q10", new MascaraMaster(connectionProperties));
 
         queries = new HashMap<>();
-        compliantqueries = new HashMap<>();
 
         queries.put("q1", readFile("src/main/resources/queries/tpch/aggregate/q1.sql"));
         queries.put("q3", readFile("src/main/resources/queries/tpch/aggregate/q3.sql"));
@@ -61,37 +60,33 @@ public class EfficiencyOverhead {
         MascaraMaster mascara = mascaraMap.get("q1");
         logicalPlans.put("q1", mascara.getLogicalPlan(queryString));
         compliantPlans.put("q1", mascara.modify(logicalPlans.get("q1")));
-        compliantqueries.put("q1", mascara.getCompliantQuery(logicalPlans.get("q1"), compliantPlans.get("q1")));
 
         queryString = queries.get("q3");
         mascara = mascaraMap.get("q3");
         logicalPlans.put("q3", mascara.getLogicalPlan(queryString));
         compliantPlans.put("q3", mascara.modify(logicalPlans.get("q3")));
-        compliantqueries.put("q3", mascara.getCompliantQuery(logicalPlans.get("q3"), compliantPlans.get("q3")));
 
         queryString = queries.get("q5");
         mascara = mascaraMap.get("q5");
         logicalPlans.put("q5", mascara.getLogicalPlan(queryString));
         compliantPlans.put("q5", mascara.modify(logicalPlans.get("q5")));
-        compliantqueries.put("q5", mascara.getCompliantQuery(logicalPlans.get("q5"), compliantPlans.get("q5")));
 
         queryString = queries.get("q6");
         mascara = mascaraMap.get("q6");
         logicalPlans.put("q6", mascara.getLogicalPlan(queryString));
         compliantPlans.put("q6", mascara.modify(logicalPlans.get("q6")));
-        compliantqueries.put("q6", mascara.getCompliantQuery(logicalPlans.get("q6"), compliantPlans.get("q6")));
 
         queryString = queries.get("q10");
         mascara = mascaraMap.get("q10");
         logicalPlans.put("q10", mascara.getLogicalPlan(queryString));
         compliantPlans.put("q10", mascara.modify(logicalPlans.get("q10")));
-        compliantqueries.put("q10", mascara.getCompliantQuery(logicalPlans.get("q10"), compliantPlans.get("q10")));
     }
     public static void main(String[] args) throws Exception {
         Options opt = new OptionsBuilder()
                 .include(EfficiencyOverhead.class.getSimpleName())
                 .resultFormat(ResultFormatType.CSV)  // Set result format to CSV
-                .result("src/main/resources/results/efficiency/overhead.csv")
+//                .result("src/main/resources/results/efficiency/overhead.csv")
+                .result("src/main/resources/results/efficiency/overhead_10000.csv")
                 .build();
 
         new Runner(opt).run();
@@ -101,9 +96,11 @@ public class EfficiencyOverhead {
     private String configuration;
 
     @Benchmark
-    @Fork(value = 1, warmups = 1)
-    @Warmup(iterations = 10, time = 200, timeUnit = TimeUnit.MILLISECONDS)
-    @Measurement(iterations = 20, time = 200, timeUnit = TimeUnit.MILLISECONDS)
+    @Fork(value = 1)
+//    @Warmup(iterations = 10, time = 200, timeUnit = TimeUnit.MILLISECONDS)
+//    @Measurement(iterations = 20, time = 200, timeUnit = TimeUnit.MILLISECONDS)
+    @Warmup(iterations = 5, time = 1, timeUnit = TimeUnit.NANOSECONDS)
+    @Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.NANOSECONDS)
     public List<CompliantPlan> benchmarkModify() throws Exception {
         MascaraMaster mascara = mascaraMap.get(configuration);
         String queryString = queries.get(configuration);
@@ -112,33 +109,18 @@ public class EfficiencyOverhead {
     }
 
     @Benchmark
-    @Fork(value = 1, warmups = 1)
-    @Warmup(iterations = 10, time = 200, timeUnit = TimeUnit.MILLISECONDS)
-    @Measurement(iterations = 20, time = 200, timeUnit = TimeUnit.MILLISECONDS)
+    @Fork(value = 1)
+//    @Warmup(iterations = 10, time = 200, timeUnit = TimeUnit.MILLISECONDS)
+//    @Measurement(iterations = 20, time = 200, timeUnit = TimeUnit.MILLISECONDS)
+    @Warmup(iterations = 5, time = 1, timeUnit = TimeUnit.NANOSECONDS)
+    @Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.NANOSECONDS)
     public List<CompliantPlan> benchmarkEstimate() throws Exception {
+
         MascaraMaster mascara = mascaraMap.get(configuration);
         RelRoot logicalPlan = logicalPlans.get(configuration);
         List<CompliantPlan> compliantPlan = compliantPlans.get(configuration);
-        return mascara.estimateUtilityScores(logicalPlan, compliantPlan);
-    }
+        List<CompliantPlan> compliantPlans = mascara.estimateUtilityScores(logicalPlan, compliantPlan);
 
-    @Benchmark
-    @Fork(value = 1, warmups = 1)
-    @Warmup(iterations = 10, time = 200, timeUnit = TimeUnit.MILLISECONDS)
-    @Measurement(iterations = 20, time = 200, timeUnit = TimeUnit.MILLISECONDS)
-    public boolean benchmarkExecutingCompliant() throws Exception {
-        MascaraMaster mascara = mascaraMap.get(configuration);
-        String compliantQuery = compliantqueries.get(configuration);
-        return mascara.executeQuery(compliantQuery);
-    }
-
-    @Benchmark
-    @Fork(value = 1, warmups = 1)
-    @Warmup(iterations = 10, time = 200, timeUnit = TimeUnit.MILLISECONDS)
-    @Measurement(iterations = 20, time = 200, timeUnit = TimeUnit.MILLISECONDS)
-    public boolean benchmarkExecuting() throws Exception {
-        MascaraMaster mascara = mascaraMap.get(configuration);
-        String query = queries.get(configuration);
-        return mascara.executeQuery(query);
+        return compliantPlans;
     }
 }

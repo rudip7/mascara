@@ -118,6 +118,12 @@ public class StatisticsManager {
         }
     }
 
+    public void resetEntropies(){
+        for (TableStatistics tableStatistics : statisticsCatalog.values()){
+            tableStatistics.resetEntropies();
+        }
+    }
+
 
 
     public TableStatistics getTableStatistics(List<String> tableName){

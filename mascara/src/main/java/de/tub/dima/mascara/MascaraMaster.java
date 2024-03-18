@@ -7,6 +7,8 @@ import de.tub.dima.mascara.modifier.QueryModifier;
 import de.tub.dima.mascara.optimizer.QualityEstimator;
 import de.tub.dima.mascara.optimizer.statistics.StatisticsManager;
 import de.tub.dima.mascara.parser.Parser;
+import de.tub.dima.mascara.policies.AccessControlPolicy;
+import de.tub.dima.mascara.policies.AttributeMapping;
 import de.tub.dima.mascara.policies.PoliciesCatalog;
 import de.tub.dima.mascara.utils.CompliantQueriesTracker;
 import de.tub.dima.mascara.utils.DebuggingTools;
@@ -120,12 +122,46 @@ public class MascaraMaster {
 //            System.out.println(compliantPlan.getId()+": Total Utility Score: " + compliantPlan.getUtilityScore()+"\n");
         }
         compliantPlans.sort((o1, o2) -> o1.getUtilityScore().compareTo(o2.getUtilityScore()));
+//        resetEntropies(compliantPlans);
         return compliantPlans;
+    }
+
+    public void resetEntropies(List<CompliantPlan> compliantPlans){
+        for (int i = 0; i < compliantPlans.size(); i++) {
+            CompliantPlan compliantPlan = compliantPlans.get(i);
+            for (AttributeMapping mapping : compliantPlan.queryAttributes.getRelevantMappings()) {
+                if (mapping.isMasked()){
+                    mapping.getCompliantStats().resetEntropy();
+                }
+            }
+        }
     }
 
     public String getCompliantQuery(RelRoot logicalPlan, List<CompliantPlan> compliantPlans) throws SQLException {
         estimateUtilityScores(logicalPlan, compliantPlans);
         return planToSql(compliantPlans.get(0).logicalPlan.rel);
+    }
+
+    public String getCompliantQueryDynamic(RelRoot logicalPlan, List<CompliantPlan> compliantPlans) throws SQLException {
+        estimateUtilityScores(logicalPlan, compliantPlans);
+        CompliantPlan compliantPlan = compliantPlans.get(0);
+        return makeDynamic(compliantPlan);
+    }
+
+    public String makeDynamic(CompliantPlan compliantPlan) {
+        String compliantQuery = planToSql(compliantPlan.logicalPlan.rel);
+        for (AccessControlPolicy policy : compliantPlan.getPolicies()){
+            compliantQuery = makePolicyDynamic(compliantQuery, policy);
+        }
+
+        return compliantQuery;
+    }
+
+    public String makePolicyDynamic(String compliantQuery, AccessControlPolicy policy){
+        String policyName = policy.getPathName();
+        String policySql = policy.getPolicySqlForDynamic();
+
+        return compliantQuery.replace(policyName, policySql);
     }
 
     public static String planToSql(RelNode plan){

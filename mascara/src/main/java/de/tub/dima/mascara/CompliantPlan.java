@@ -75,5 +75,7 @@ public class CompliantPlan {
         return cardinalityQuery;
     }
 
-
+    public List<AccessControlPolicy> getPolicies() {
+        return policies;
+    }
 }
