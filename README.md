@@ -1,6 +1,3 @@
-# mascara
-Compliant Data Processing for RDBMS
-
 # Mascara: Disclosure-Compliant Query Answering
 
 This repository provides a prototype of Mascara, a middleware for specifying and enforcing data disclosure policies. Mascara extends traditional access control mechanisms with data masking to support partial disclosure of sensitive data. This allows for data officers to define anonymization-based policies to comply with data protection regulations, such as European Union’s General Data Protection Regulation (GDPR) and the California Consumer Privacy Act (CCPA). Further, Mascara also allows context-based data masking, i.e., it allows specifying masking of attributes depending on which combination of attributes are being accessed. To this end, we propose a utility estimator, which estimates the similarity between the user and modified queries. Our utility estimator enables the modification of a user query into a disclosure-compliant one with the best information quality.
