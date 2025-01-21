@@ -37,7 +37,7 @@ public class Playground {
         MascaraMaster mascara = new MascaraMaster(connectionProperties);
 
 //         Debug
-        String queryString = readFile("src/main/resources/queries/tpch/aggregate/q10.sql");
+//        String queryString = readFile("src/main/resources/queries/tpch/aggregate/q10.sql");
 ////        String queryString = readFile("src/main/resources/queries/tpch/final/q3_c_l_o_final.sql");
 //        RelRoot logicalPlan = mascara.getLogicalPlan(queryString);
 //        List<CompliantPlan> modifiedQueries = mascara.modify(logicalPlan);
@@ -47,6 +47,9 @@ public class Playground {
 //        System.out.println("-----------------------------");
 //        System.out.println(optimalQuery.getId());
 //        System.out.println(optimalQuery.getCardinalityQuery());
+
+
+        String queryString = readFile("src/main/resources/queries/test/test.sql");
 
         mascara.parser.getLogicalPlanDebugging(queryString);
 
