@@ -8,7 +8,14 @@ This repository provides a prototype of Mascara, a middleware for specifying and
 - Connection via JDBC to the underlying database (currently only available for PostgreSQL databases).
 - Collection of data masking function implementations as UDFs.
 - Utility estimation of anonymized data to find the disclosure-compliant query that preserves the highest utility while complying to all defined disclousire policies.
-  
+
+
+### Set-up
+
+Mascara in it's current state is prepared to work with PostgreSQL. Technically it should work with any database with JDBC connection but this has not been tested yet.
+To run the examples and experiments in our SIGMOD paper, you must initiallize  
+
+
 ### Publications
 #### Disclosure-Compliant Query Answering (SIGMOD 2025)
 
