@@ -1,20 +1,29 @@
 # Mascara: Disclosure-Compliant Query Answering
 
-This repository provides a prototype of Mascara, a middleware for specifying and enforcing data disclosure policies. Mascara extends traditional access control mechanisms with data masking to support partial disclosure of sensitive data. This allows for data officers to define anonymization-based policies to comply with data protection regulations, such as European Union’s General Data Protection Regulation (GDPR) and the California Consumer Privacy Act (CCPA). Further, Mascara also allows context-based data masking, i.e., it allows specifying masking of attributes depending on which combination of attributes are being accessed. To this end, we propose a utility estimator, which estimates the similarity between the user and modified queries. Our utility estimator enables the modification of a user query into a disclosure-compliant one with the best information quality.
+This repository provides a prototype of Mascara, a middleware for specifying and enforcing data disclosure policies. Mascara extends traditional access control mechanisms with data masking to support partial disclosure of sensitive data. This allows data officers to define anonymization-based policies to comply with data protection regulations, such as the European Union’s General Data Protection Regulation (GDPR) and the California Consumer Privacy Act (CCPA). Further, Mascara also allows context-based data masking, i.e., it allows specifying masking of attributes depending on which combination of attributes are being accessed. To this end, we propose a utility estimator, which estimates the similarity between the user and modified queries. Our utility estimator enables the modification of a user query into a disclosure-compliant one with the best information quality.
 
 ### Features:
 - Access control policies using masking functions to anonymize sensitive data.
 - Query modification to rewrite user queries into disclosure-compliant queries. 
 - Connection via JDBC to the underlying database (currently only available for PostgreSQL databases).
 - Collection of data masking function implementations as UDFs.
-- Utility estimation of anonymized data to find the disclosure-compliant query that preserves the highest utility while complying to all defined disclousire policies.
+- Utility estimation of anonymized data to find the disclosure-compliant query that preserves the highest utility while complying with defined disclosure policies.
 
 
 ### Set-up
 
-Mascara in it's current state is prepared to work with PostgreSQL. Technically it should work with any database with JDBC connection but this has not been tested yet.
-To run the examples and experiments in our SIGMOD paper, you must initiallize  
+Mascara, in its current state, is prepared to work with PostgreSQL. Technically, it should work with any database with a JDBC connection, but this has not been tested yet.
+You must initialize a TPC-H dataset in your PostgreSQL database to run the examples and experiments in our SIGMOD paper. We recommend using [tpch-pgsql](https://github.com/Data-Science-Platform/tpch-pgsql).
 
+Once this is done, run the SQL script at ```mascara/src/main/resources/maskingFunctions/masking.sql```. This file contains a collection of masking functions implemented as UDF in the plpgsql language.
+
+Now, we can define the disclosure policies to protect sensitive data. This is done by running the scrip in ```mascara/src/main/resources/policies/tpch/sigmod_policies.sql```. Note that the policies are defined as materialized views for the initial prototype. In the future, we will add a parser that allows data officers to define disclosure policies using the same policy definition language as defined in our publications. Finally, Mascara needs to be aware of the current policies. The list containing all policy names is located at ```mascara/src/main/java/de/tub/dima/mascara/policies/PoliciesCatalog.java```. Please update this list if you plan to create your own policies.
+
+All our experiments are located in the ```mascara/src/main/java/de/tub/dima/mascara/examples/``` package. We recommend starting with ```mascara/src/main/java/de/tub/dima/mascara/examples/Playground.java``` as this is the simplest example.
+
+For any problem don't hesitate to contact me: 
+Rudi Poepsel-Lemaitre
+[r.poepsellemaitre@tu-berlin.de](mailto:r.poepsellemaitre@tu-berlin.de)
 
 ### Publications
 #### Disclosure-Compliant Query Answering (SIGMOD 2025)
