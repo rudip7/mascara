@@ -29,4 +29,18 @@ CREATE MATERIALIZED VIEW o_p2 AS
 SELECT o_orderkey, o_custkey, generalize_date(o_orderdate, 'MONTH') as o_orderdate, o_orderpriority, o_shippriority, o_comment
 FROM orders;
 
+-- EXTRA TABLES WITHOUT MASKING
+create materialized view n as
+select *
+from nation;
+
+create materialized view r as
+select *
+from region;
+
+create materialized view s as
+select *
+from supplier;
+
+
 
