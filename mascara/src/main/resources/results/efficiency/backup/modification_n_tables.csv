@@ -1,7 +1,0 @@
-"Benchmark","Mode","Threads","Samples","Score","Score Error (99,9%)","Unit","Param: configuration"
-"de.tub.dima.mascara.EfficiencyModificationMultipleTables.benchmarkModify","avgt",1,20,"8,958880","1,125812","ms/op",join_6
-"de.tub.dima.mascara.EfficiencyModificationMultipleTables.benchmarkModify","avgt",1,20,"5,508483","1,357956","ms/op",join_5
-"de.tub.dima.mascara.EfficiencyModificationMultipleTables.benchmarkModify","avgt",1,20,"4,538271","0,825397","ms/op",join_4
-"de.tub.dima.mascara.EfficiencyModificationMultipleTables.benchmarkModify","avgt",1,20,"3,420074","0,758392","ms/op",join_3
-"de.tub.dima.mascara.EfficiencyModificationMultipleTables.benchmarkModify","avgt",1,20,"2,855320","0,548205","ms/op",join_2
-"de.tub.dima.mascara.EfficiencyModificationMultipleTables.benchmarkModify","avgt",1,20,"2,012669","0,705038","ms/op",join_1
