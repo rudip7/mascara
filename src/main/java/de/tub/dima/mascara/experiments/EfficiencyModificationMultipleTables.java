@@ -1,4 +1,4 @@
-package de.tub.dima.mascara.examples;
+package de.tub.dima.mascara.experiments;
 
 import de.tub.dima.mascara.modifier.CompliantPlan;
 import de.tub.dima.mascara.MascaraMaster;
@@ -9,6 +9,7 @@ import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 
+import java.io.FileInputStream;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -25,13 +26,8 @@ public class EfficiencyModificationMultipleTables {
     public void setup() throws Exception {
         // Initialize Mascara and queryString here
         Properties connectionProperties = new Properties();
-//        connectionProperties.put("url", "jdbc:postgresql://localhost:5432/mascaradb");
-        connectionProperties.put("url", "jdbc:postgresql://localhost:5432/tpchdb");
-        connectionProperties.put("driverClassName", "org.postgresql.Driver");
-        connectionProperties.put("username", "postgres");
-        connectionProperties.put("user", "postgres");
-        connectionProperties.put("password", "1902");
-        connectionProperties.put("schema", "public");
+        FileInputStream input = new FileInputStream("src/main/resources/config.properties");
+        connectionProperties.load(input);
 
         mascara = new MascaraMaster(connectionProperties, Arrays.asList("c_p1", "l_p1", "o_p1", "n", "s", "r"));
 

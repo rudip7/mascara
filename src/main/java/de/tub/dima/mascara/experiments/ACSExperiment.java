@@ -1,11 +1,8 @@
-package de.tub.dima.mascara.examples;
+package de.tub.dima.mascara.experiments;
 
 import de.tub.dima.mascara.MascaraMaster;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.FileInputStream;
 import java.util.Properties;
 
 import static de.tub.dima.mascara.utils.Utils.readFile;
@@ -16,12 +13,8 @@ public class ACSExperiment {
 
         Properties connectionProperties = new Properties();
 //        connectionProperties.put("url", "jdbc:postgresql://localhost:5432/mascaradb");
-        connectionProperties.put("url", "jdbc:postgresql://localhost:5432/tpchdb");
-        connectionProperties.put("driverClassName", "org.postgresql.Driver");
-        connectionProperties.put("username", "postgres");
-        connectionProperties.put("user", "postgres");
-        connectionProperties.put("password", "1902");
-        connectionProperties.put("schema", "public");
+        FileInputStream input = new FileInputStream("src/main/resources/config.properties");
+        connectionProperties.load(input);
 
         MascaraMaster mascara = new MascaraMaster(connectionProperties);
 

@@ -1,20 +1,20 @@
 {
   "query" : "select l_extendedprice, l_discount\nfrom orders, lineitem\nwhere o_orderkey = l_orderkey\n    and o_orderdate >= date '1993-10-01'\n    AND o_orderdate < date '1994-01-01'\n    and l_returnflag = 'R'",
   "compliantQueries" : [ {
+    "id" : "o_p1-l_p2",
+    "compliantQuery" : "SELECT l_p2.l_extendedprice, l_p2.l_discount\r\nFROM public.o_p1,\r\npublic.l_p2\r\nWHERE o_p1.o_orderkey = l_p2.l_orderkey AND (o_p1.o_orderdate >= DATE '1993-10-01' AND o_p1.o_orderdate < DATE '1994-01-01') AND l_p2.l_returnflag = 'R'"
+  }, {
+    "id" : "o_p2-l_p2",
+    "compliantQuery" : "SELECT l_p2.l_extendedprice, l_p2.l_discount\r\nFROM public.o_p2,\r\npublic.l_p2\r\nWHERE o_p2.o_orderkey = l_p2.l_orderkey AND o_p2.o_orderdate >= generalize_date(DATE '1993-10-01', 'MONTH') AND o_p2.o_orderdate < generalize_date(DATE '1994-01-01', 'MONTH') AND l_p2.l_returnflag = 'R'"
+  }, {
     "id" : "o_p1-l_p3",
     "compliantQuery" : "SELECT l_p3.l_extendedprice, l_p3.l_discount\r\nFROM public.o_p1,\r\npublic.l_p3\r\nWHERE o_p1.o_orderkey = l_p3.l_orderkey AND (o_p1.o_orderdate >= DATE '1993-10-01' AND o_p1.o_orderdate < DATE '1994-01-01') AND l_p3.l_returnflag = 'R'"
   }, {
     "id" : "o_p2-l_p3",
     "compliantQuery" : "SELECT l_p3.l_extendedprice, l_p3.l_discount\r\nFROM public.o_p2,\r\npublic.l_p3\r\nWHERE o_p2.o_orderkey = l_p3.l_orderkey AND o_p2.o_orderdate >= generalize_date(DATE '1993-10-01', 'MONTH') AND o_p2.o_orderdate < generalize_date(DATE '1994-01-01', 'MONTH') AND l_p3.l_returnflag = 'R'"
   }, {
-    "id" : "o_p1-l_p2",
-    "compliantQuery" : "SELECT l_p2.l_extendedprice, l_p2.l_discount\r\nFROM public.o_p1,\r\npublic.l_p2\r\nWHERE o_p1.o_orderkey = l_p2.l_orderkey AND (o_p1.o_orderdate >= DATE '1993-10-01' AND o_p1.o_orderdate < DATE '1994-01-01') AND l_p2.l_returnflag = 'R'"
-  }, {
     "id" : "o_p1-l_p1",
     "compliantQuery" : "SELECT l_p1.l_extendedprice, l_p1.l_discount\r\nFROM public.o_p1,\r\npublic.l_p1\r\nWHERE o_p1.o_orderkey = l_p1.l_orderkey AND (o_p1.o_orderdate >= DATE '1993-10-01' AND o_p1.o_orderdate < DATE '1994-01-01') AND l_p1.l_returnflag = 'R'"
-  }, {
-    "id" : "o_p2-l_p2",
-    "compliantQuery" : "SELECT l_p2.l_extendedprice, l_p2.l_discount\r\nFROM public.o_p2,\r\npublic.l_p2\r\nWHERE o_p2.o_orderkey = l_p2.l_orderkey AND o_p2.o_orderdate >= generalize_date(DATE '1993-10-01', 'MONTH') AND o_p2.o_orderdate < generalize_date(DATE '1994-01-01', 'MONTH') AND l_p2.l_returnflag = 'R'"
   }, {
     "id" : "o_p2-l_p1",
     "compliantQuery" : "SELECT l_p1.l_extendedprice, l_p1.l_discount\r\nFROM public.o_p2,\r\npublic.l_p1\r\nWHERE o_p2.o_orderkey = l_p1.l_orderkey AND o_p2.o_orderdate >= generalize_date(DATE '1993-10-01', 'MONTH') AND o_p2.o_orderdate < generalize_date(DATE '1994-01-01', 'MONTH') AND l_p1.l_returnflag = 'R'"

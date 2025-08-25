@@ -12,6 +12,7 @@ import de.tub.dima.mascara.dataMasking.tpch.alphabets.PhoneAlphabet;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 
 public class AlphabetCatalog {
@@ -51,25 +52,27 @@ public class AlphabetCatalog {
         this.alphabets.put("phoneAlphabet", phoneAlphabet);
 
 
-        fromJSON("src/main/resources/alphabets/tpch.json");
+        fromJSON("alphabets/tpch.json");
 //        fromJSON("src/main/resources/alphabets/acs.json");
     }
 
-    public void fromJSON(String jsonFilePath){
-        try {
-            File jsonFile = new File(jsonFilePath);
-            if (jsonFile.exists()) {
-                ObjectMapper objectMapper = new ObjectMapper();
-                JsonNode rootNode = objectMapper.readTree(jsonFile);
-                this.alphabetMapping = new HashMap<>();
-                parseJSON(rootNode, new ArrayList<>(), this.alphabetMapping);
-            } else {
-                System.err.println("JSON file not found at the specified path.");
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+public void fromJSON(String jsonFilePath) {
+    try {
+        ClassLoader classLoader = getClass().getClassLoader();
+        // Load the resource as a stream
+        InputStream inputStream = classLoader.getResourceAsStream(jsonFilePath);
+        if (inputStream != null) {
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode rootNode = objectMapper.readTree(inputStream);
+            this.alphabetMapping = new HashMap<>();
+            parseJSON(rootNode, new ArrayList<>(), this.alphabetMapping);
+        } else {
+            System.err.println("JSON file not found at the specified path: " + jsonFilePath);
         }
+    } catch (IOException e) {
+        e.printStackTrace();
     }
+}
 
     private static void parseJSON(JsonNode node, List<String> currentPath, Map<List<String>, String> resultMap) {
         for (Iterator<Map.Entry<String, JsonNode>> it = node.fields(); it.hasNext(); ) {

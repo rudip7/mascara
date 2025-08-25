@@ -1,40 +1,40 @@
 {
   "query" : "select n_name, l_extendedprice, l_discount\nfrom customer, orders, lineitem, supplier, nation, region\nwhere c_custkey = o_custkey\n  AND l_orderkey = o_orderkey\n  AND l_suppkey = s_suppkey\n  AND c_nationkey = s_nationkey\n  AND s_nationkey = n_nationkey\n  AND n_regionkey = r_regionkey\n  AND r_name = 'ASIA'\n    AND o_orderdate >= date '1994-01-01'\n    AND o_orderdate < date '1995-01-01'",
   "compliantQueries" : [ {
-    "id" : "n-c_p1-s-o_p1-l_p3-r",
-    "compliantQuery" : "SELECT n.n_name, l_p3.l_extendedprice, l_p3.l_discount\r\nFROM public.c_p1,\r\npublic.o_p1,\r\npublic.l_p3,\r\npublic.s,\r\npublic.n,\r\npublic.r\r\nWHERE c_p1.c_custkey = o_p1.o_custkey AND l_p3.l_orderkey = o_p1.o_orderkey AND (l_p3.l_suppkey = s.s_suppkey AND c_p1.c_nationkey = s.s_nationkey) AND (s.s_nationkey = n.n_nationkey AND n.n_regionkey = r.r_regionkey AND (r.r_name = 'ASIA' AND (o_p1.o_orderdate >= DATE '1994-01-01' AND o_p1.o_orderdate < DATE '1995-01-01')))"
-  }, {
-    "id" : "n-c_p2-s-o_p1-l_p3-r",
-    "compliantQuery" : "SELECT n.n_name, l_p3.l_extendedprice, l_p3.l_discount\r\nFROM public.c_p2,\r\npublic.o_p1,\r\npublic.l_p3,\r\npublic.s,\r\npublic.n,\r\npublic.r\r\nWHERE c_p2.c_custkey = o_p1.o_custkey AND l_p3.l_orderkey = o_p1.o_orderkey AND (l_p3.l_suppkey = s.s_suppkey AND c_p2.c_nationkey = s.s_nationkey) AND (s.s_nationkey = n.n_nationkey AND n.n_regionkey = r.r_regionkey AND (r.r_name = 'ASIA' AND (o_p1.o_orderdate >= DATE '1994-01-01' AND o_p1.o_orderdate < DATE '1995-01-01')))"
-  }, {
-    "id" : "n-c_p1-s-o_p2-l_p3-r",
-    "compliantQuery" : "SELECT n.n_name, l_p3.l_extendedprice, l_p3.l_discount\r\nFROM public.c_p1,\r\npublic.o_p2,\r\npublic.l_p3,\r\npublic.s,\r\npublic.n,\r\npublic.r\r\nWHERE c_p1.c_custkey = o_p2.o_custkey AND l_p3.l_orderkey = o_p2.o_orderkey AND (l_p3.l_suppkey = s.s_suppkey AND c_p1.c_nationkey = s.s_nationkey) AND (s.s_nationkey = n.n_nationkey AND n.n_regionkey = r.r_regionkey AND (r.r_name = 'ASIA                     ' AND (o_p2.o_orderdate >= generalize_date(DATE '1994-01-01', 'MONTH') AND o_p2.o_orderdate < generalize_date(DATE '1995-01-01', 'MONTH'))))"
-  }, {
-    "id" : "n-c_p2-s-o_p2-l_p3-r",
-    "compliantQuery" : "SELECT n.n_name, l_p3.l_extendedprice, l_p3.l_discount\r\nFROM public.c_p2,\r\npublic.o_p2,\r\npublic.l_p3,\r\npublic.s,\r\npublic.n,\r\npublic.r\r\nWHERE c_p2.c_custkey = o_p2.o_custkey AND l_p3.l_orderkey = o_p2.o_orderkey AND (l_p3.l_suppkey = s.s_suppkey AND c_p2.c_nationkey = s.s_nationkey) AND (s.s_nationkey = n.n_nationkey AND n.n_regionkey = r.r_regionkey AND (r.r_name = 'ASIA                     ' AND (o_p2.o_orderdate >= generalize_date(DATE '1994-01-01', 'MONTH') AND o_p2.o_orderdate < generalize_date(DATE '1995-01-01', 'MONTH'))))"
-  }, {
-    "id" : "n-c_p1-s-o_p1-l_p2-r",
-    "compliantQuery" : "SELECT n.n_name, l_p2.l_extendedprice, l_p2.l_discount\r\nFROM public.c_p1,\r\npublic.o_p1,\r\npublic.l_p2,\r\npublic.s,\r\npublic.n,\r\npublic.r\r\nWHERE c_p1.c_custkey = o_p1.o_custkey AND l_p2.l_orderkey = o_p1.o_orderkey AND (l_p2.l_suppkey = s.s_suppkey AND c_p1.c_nationkey = s.s_nationkey) AND (s.s_nationkey = n.n_nationkey AND n.n_regionkey = r.r_regionkey AND (r.r_name = 'ASIA' AND (o_p1.o_orderdate >= DATE '1994-01-01' AND o_p1.o_orderdate < DATE '1995-01-01')))"
-  }, {
-    "id" : "n-c_p2-s-o_p1-l_p2-r",
+    "id" : "n-s-c_p2-o_p1-l_p2-r",
     "compliantQuery" : "SELECT n.n_name, l_p2.l_extendedprice, l_p2.l_discount\r\nFROM public.c_p2,\r\npublic.o_p1,\r\npublic.l_p2,\r\npublic.s,\r\npublic.n,\r\npublic.r\r\nWHERE c_p2.c_custkey = o_p1.o_custkey AND l_p2.l_orderkey = o_p1.o_orderkey AND (l_p2.l_suppkey = s.s_suppkey AND c_p2.c_nationkey = s.s_nationkey) AND (s.s_nationkey = n.n_nationkey AND n.n_regionkey = r.r_regionkey AND (r.r_name = 'ASIA' AND (o_p1.o_orderdate >= DATE '1994-01-01' AND o_p1.o_orderdate < DATE '1995-01-01')))"
   }, {
-    "id" : "n-c_p1-s-o_p2-l_p2-r",
+    "id" : "n-s-c_p1-o_p1-l_p2-r",
+    "compliantQuery" : "SELECT n.n_name, l_p2.l_extendedprice, l_p2.l_discount\r\nFROM public.c_p1,\r\npublic.o_p1,\r\npublic.l_p2,\r\npublic.s,\r\npublic.n,\r\npublic.r\r\nWHERE c_p1.c_custkey = o_p1.o_custkey AND l_p2.l_orderkey = o_p1.o_orderkey AND (l_p2.l_suppkey = s.s_suppkey AND c_p1.c_nationkey = s.s_nationkey) AND (s.s_nationkey = n.n_nationkey AND n.n_regionkey = r.r_regionkey AND (r.r_name = 'ASIA' AND (o_p1.o_orderdate >= DATE '1994-01-01' AND o_p1.o_orderdate < DATE '1995-01-01')))"
+  }, {
+    "id" : "n-s-c_p1-o_p2-l_p2-r",
     "compliantQuery" : "SELECT n.n_name, l_p2.l_extendedprice, l_p2.l_discount\r\nFROM public.c_p1,\r\npublic.o_p2,\r\npublic.l_p2,\r\npublic.s,\r\npublic.n,\r\npublic.r\r\nWHERE c_p1.c_custkey = o_p2.o_custkey AND l_p2.l_orderkey = o_p2.o_orderkey AND (l_p2.l_suppkey = s.s_suppkey AND c_p1.c_nationkey = s.s_nationkey) AND (s.s_nationkey = n.n_nationkey AND n.n_regionkey = r.r_regionkey AND (r.r_name = 'ASIA                     ' AND (o_p2.o_orderdate >= generalize_date(DATE '1994-01-01', 'MONTH') AND o_p2.o_orderdate < generalize_date(DATE '1995-01-01', 'MONTH'))))"
   }, {
-    "id" : "n-c_p2-s-o_p2-l_p2-r",
+    "id" : "n-s-c_p2-o_p2-l_p2-r",
     "compliantQuery" : "SELECT n.n_name, l_p2.l_extendedprice, l_p2.l_discount\r\nFROM public.c_p2,\r\npublic.o_p2,\r\npublic.l_p2,\r\npublic.s,\r\npublic.n,\r\npublic.r\r\nWHERE c_p2.c_custkey = o_p2.o_custkey AND l_p2.l_orderkey = o_p2.o_orderkey AND (l_p2.l_suppkey = s.s_suppkey AND c_p2.c_nationkey = s.s_nationkey) AND (s.s_nationkey = n.n_nationkey AND n.n_regionkey = r.r_regionkey AND (r.r_name = 'ASIA                     ' AND (o_p2.o_orderdate >= generalize_date(DATE '1994-01-01', 'MONTH') AND o_p2.o_orderdate < generalize_date(DATE '1995-01-01', 'MONTH'))))"
   }, {
-    "id" : "n-c_p1-s-o_p1-l_p1-r",
+    "id" : "n-s-c_p2-o_p1-l_p3-r",
+    "compliantQuery" : "SELECT n.n_name, l_p3.l_extendedprice, l_p3.l_discount\r\nFROM public.c_p2,\r\npublic.o_p1,\r\npublic.l_p3,\r\npublic.s,\r\npublic.n,\r\npublic.r\r\nWHERE c_p2.c_custkey = o_p1.o_custkey AND l_p3.l_orderkey = o_p1.o_orderkey AND (l_p3.l_suppkey = s.s_suppkey AND c_p2.c_nationkey = s.s_nationkey) AND (s.s_nationkey = n.n_nationkey AND n.n_regionkey = r.r_regionkey AND (r.r_name = 'ASIA' AND (o_p1.o_orderdate >= DATE '1994-01-01' AND o_p1.o_orderdate < DATE '1995-01-01')))"
+  }, {
+    "id" : "n-s-c_p1-o_p1-l_p3-r",
+    "compliantQuery" : "SELECT n.n_name, l_p3.l_extendedprice, l_p3.l_discount\r\nFROM public.c_p1,\r\npublic.o_p1,\r\npublic.l_p3,\r\npublic.s,\r\npublic.n,\r\npublic.r\r\nWHERE c_p1.c_custkey = o_p1.o_custkey AND l_p3.l_orderkey = o_p1.o_orderkey AND (l_p3.l_suppkey = s.s_suppkey AND c_p1.c_nationkey = s.s_nationkey) AND (s.s_nationkey = n.n_nationkey AND n.n_regionkey = r.r_regionkey AND (r.r_name = 'ASIA' AND (o_p1.o_orderdate >= DATE '1994-01-01' AND o_p1.o_orderdate < DATE '1995-01-01')))"
+  }, {
+    "id" : "n-s-c_p1-o_p2-l_p3-r",
+    "compliantQuery" : "SELECT n.n_name, l_p3.l_extendedprice, l_p3.l_discount\r\nFROM public.c_p1,\r\npublic.o_p2,\r\npublic.l_p3,\r\npublic.s,\r\npublic.n,\r\npublic.r\r\nWHERE c_p1.c_custkey = o_p2.o_custkey AND l_p3.l_orderkey = o_p2.o_orderkey AND (l_p3.l_suppkey = s.s_suppkey AND c_p1.c_nationkey = s.s_nationkey) AND (s.s_nationkey = n.n_nationkey AND n.n_regionkey = r.r_regionkey AND (r.r_name = 'ASIA                     ' AND (o_p2.o_orderdate >= generalize_date(DATE '1994-01-01', 'MONTH') AND o_p2.o_orderdate < generalize_date(DATE '1995-01-01', 'MONTH'))))"
+  }, {
+    "id" : "n-s-c_p2-o_p2-l_p3-r",
+    "compliantQuery" : "SELECT n.n_name, l_p3.l_extendedprice, l_p3.l_discount\r\nFROM public.c_p2,\r\npublic.o_p2,\r\npublic.l_p3,\r\npublic.s,\r\npublic.n,\r\npublic.r\r\nWHERE c_p2.c_custkey = o_p2.o_custkey AND l_p3.l_orderkey = o_p2.o_orderkey AND (l_p3.l_suppkey = s.s_suppkey AND c_p2.c_nationkey = s.s_nationkey) AND (s.s_nationkey = n.n_nationkey AND n.n_regionkey = r.r_regionkey AND (r.r_name = 'ASIA                     ' AND (o_p2.o_orderdate >= generalize_date(DATE '1994-01-01', 'MONTH') AND o_p2.o_orderdate < generalize_date(DATE '1995-01-01', 'MONTH'))))"
+  }, {
+    "id" : "n-s-c_p1-o_p1-l_p1-r",
     "compliantQuery" : "SELECT n.n_name, l_p1.l_extendedprice, l_p1.l_discount\r\nFROM public.c_p1,\r\npublic.o_p1,\r\npublic.l_p1,\r\npublic.s,\r\npublic.n,\r\npublic.r\r\nWHERE c_p1.c_custkey = o_p1.o_custkey AND l_p1.l_orderkey = o_p1.o_orderkey AND (l_p1.l_suppkey = s.s_suppkey AND c_p1.c_nationkey = s.s_nationkey) AND (s.s_nationkey = n.n_nationkey AND n.n_regionkey = r.r_regionkey AND (r.r_name = 'ASIA' AND (o_p1.o_orderdate >= DATE '1994-01-01' AND o_p1.o_orderdate < DATE '1995-01-01')))"
   }, {
-    "id" : "n-c_p2-s-o_p1-l_p1-r",
+    "id" : "n-s-c_p2-o_p1-l_p1-r",
     "compliantQuery" : "SELECT n.n_name, l_p1.l_extendedprice, l_p1.l_discount\r\nFROM public.c_p2,\r\npublic.o_p1,\r\npublic.l_p1,\r\npublic.s,\r\npublic.n,\r\npublic.r\r\nWHERE c_p2.c_custkey = o_p1.o_custkey AND l_p1.l_orderkey = o_p1.o_orderkey AND (l_p1.l_suppkey = s.s_suppkey AND c_p2.c_nationkey = s.s_nationkey) AND (s.s_nationkey = n.n_nationkey AND n.n_regionkey = r.r_regionkey AND (r.r_name = 'ASIA' AND (o_p1.o_orderdate >= DATE '1994-01-01' AND o_p1.o_orderdate < DATE '1995-01-01')))"
   }, {
-    "id" : "n-c_p1-s-o_p2-l_p1-r",
+    "id" : "n-s-c_p1-o_p2-l_p1-r",
     "compliantQuery" : "SELECT n.n_name, l_p1.l_extendedprice, l_p1.l_discount\r\nFROM public.c_p1,\r\npublic.o_p2,\r\npublic.l_p1,\r\npublic.s,\r\npublic.n,\r\npublic.r\r\nWHERE c_p1.c_custkey = o_p2.o_custkey AND l_p1.l_orderkey = o_p2.o_orderkey AND (l_p1.l_suppkey = s.s_suppkey AND c_p1.c_nationkey = s.s_nationkey) AND (s.s_nationkey = n.n_nationkey AND n.n_regionkey = r.r_regionkey AND (r.r_name = 'ASIA                     ' AND (o_p2.o_orderdate >= generalize_date(DATE '1994-01-01', 'MONTH') AND o_p2.o_orderdate < generalize_date(DATE '1995-01-01', 'MONTH'))))"
   }, {
-    "id" : "n-c_p2-s-o_p2-l_p1-r",
+    "id" : "n-s-c_p2-o_p2-l_p1-r",
     "compliantQuery" : "SELECT n.n_name, l_p1.l_extendedprice, l_p1.l_discount\r\nFROM public.c_p2,\r\npublic.o_p2,\r\npublic.l_p1,\r\npublic.s,\r\npublic.n,\r\npublic.r\r\nWHERE c_p2.c_custkey = o_p2.o_custkey AND l_p1.l_orderkey = o_p2.o_orderkey AND (l_p1.l_suppkey = s.s_suppkey AND c_p2.c_nationkey = s.s_nationkey) AND (s.s_nationkey = n.n_nationkey AND n.n_regionkey = r.r_regionkey AND (r.r_name = 'ASIA                     ' AND (o_p2.o_orderdate >= generalize_date(DATE '1994-01-01', 'MONTH') AND o_p2.o_orderdate < generalize_date(DATE '1995-01-01', 'MONTH'))))"
   } ]
 }

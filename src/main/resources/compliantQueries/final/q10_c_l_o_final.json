@@ -1,38 +1,38 @@
 {
   "query" : "select c_custkey, l_extendedprice, l_discount, c_acctbal, n_name, c_phone, c_comment\nfrom customer, orders, lineitem, nation\nwhere c_custkey = o_custkey\n    AND l_orderkey = o_orderkey\n    AND c_nationkey = n_nationkey\n    AND o_orderdate >= date '1993-10-01'\n    AND o_orderdate < date '1994-01-01'\n    AND l_returnflag = 'R'",
   "compliantQueries" : [ {
-    "id" : "n-c_p2-o_p1-l_p3",
-    "compliantQuery" : "SELECT c_p2.c_custkey, l_p3.l_extendedprice, l_p3.l_discount, c_p2.c_acctbal, n.n_name, c_p2.c_phone, c_p2.c_comment\r\nFROM public.c_p2,\r\npublic.o_p1,\r\npublic.l_p3,\r\npublic.n\r\nWHERE c_p2.c_custkey = o_p1.o_custkey AND l_p3.l_orderkey = o_p1.o_orderkey AND c_p2.c_nationkey = n.n_nationkey AND (o_p1.o_orderdate >= DATE '1993-10-01' AND o_p1.o_orderdate < DATE '1994-01-01') AND l_p3.l_returnflag = 'R'"
-  }, {
     "id" : "n-c_p2-o_p1-l_p2",
     "compliantQuery" : "SELECT c_p2.c_custkey, l_p2.l_extendedprice, l_p2.l_discount, c_p2.c_acctbal, n.n_name, c_p2.c_phone, c_p2.c_comment\r\nFROM public.c_p2,\r\npublic.o_p1,\r\npublic.l_p2,\r\npublic.n\r\nWHERE c_p2.c_custkey = o_p1.o_custkey AND l_p2.l_orderkey = o_p1.o_orderkey AND c_p2.c_nationkey = n.n_nationkey AND (o_p1.o_orderdate >= DATE '1993-10-01' AND o_p1.o_orderdate < DATE '1994-01-01') AND l_p2.l_returnflag = 'R'"
+  }, {
+    "id" : "n-c_p2-o_p1-l_p3",
+    "compliantQuery" : "SELECT c_p2.c_custkey, l_p3.l_extendedprice, l_p3.l_discount, c_p2.c_acctbal, n.n_name, c_p2.c_phone, c_p2.c_comment\r\nFROM public.c_p2,\r\npublic.o_p1,\r\npublic.l_p3,\r\npublic.n\r\nWHERE c_p2.c_custkey = o_p1.o_custkey AND l_p3.l_orderkey = o_p1.o_orderkey AND c_p2.c_nationkey = n.n_nationkey AND (o_p1.o_orderdate >= DATE '1993-10-01' AND o_p1.o_orderdate < DATE '1994-01-01') AND l_p3.l_returnflag = 'R'"
   }, {
     "id" : "n-c_p2-o_p1-l_p1",
     "compliantQuery" : "SELECT c_p2.c_custkey, l_p1.l_extendedprice, l_p1.l_discount, c_p2.c_acctbal, n.n_name, c_p2.c_phone, c_p2.c_comment\r\nFROM public.c_p2,\r\npublic.o_p1,\r\npublic.l_p1,\r\npublic.n\r\nWHERE c_p2.c_custkey = o_p1.o_custkey AND l_p1.l_orderkey = o_p1.o_orderkey AND c_p2.c_nationkey = n.n_nationkey AND (o_p1.o_orderdate >= DATE '1993-10-01' AND o_p1.o_orderdate < DATE '1994-01-01') AND l_p1.l_returnflag = 'R'"
   }, {
-    "id" : "n-c_p1-o_p1-l_p3",
-    "compliantQuery" : "SELECT c_p1.c_custkey, l_p3.l_extendedprice, l_p3.l_discount, c_p1.c_acctbal, n.n_name, c_p1.c_phone, c_p1.c_comment\r\nFROM public.c_p1,\r\npublic.o_p1,\r\npublic.l_p3,\r\npublic.n\r\nWHERE c_p1.c_custkey = o_p1.o_custkey AND l_p3.l_orderkey = o_p1.o_orderkey AND c_p1.c_nationkey = n.n_nationkey AND (o_p1.o_orderdate >= DATE '1993-10-01' AND o_p1.o_orderdate < DATE '1994-01-01') AND l_p3.l_returnflag = 'R'"
-  }, {
     "id" : "n-c_p1-o_p1-l_p2",
     "compliantQuery" : "SELECT c_p1.c_custkey, l_p2.l_extendedprice, l_p2.l_discount, c_p1.c_acctbal, n.n_name, c_p1.c_phone, c_p1.c_comment\r\nFROM public.c_p1,\r\npublic.o_p1,\r\npublic.l_p2,\r\npublic.n\r\nWHERE c_p1.c_custkey = o_p1.o_custkey AND l_p2.l_orderkey = o_p1.o_orderkey AND c_p1.c_nationkey = n.n_nationkey AND (o_p1.o_orderdate >= DATE '1993-10-01' AND o_p1.o_orderdate < DATE '1994-01-01') AND l_p2.l_returnflag = 'R'"
+  }, {
+    "id" : "n-c_p1-o_p1-l_p3",
+    "compliantQuery" : "SELECT c_p1.c_custkey, l_p3.l_extendedprice, l_p3.l_discount, c_p1.c_acctbal, n.n_name, c_p1.c_phone, c_p1.c_comment\r\nFROM public.c_p1,\r\npublic.o_p1,\r\npublic.l_p3,\r\npublic.n\r\nWHERE c_p1.c_custkey = o_p1.o_custkey AND l_p3.l_orderkey = o_p1.o_orderkey AND c_p1.c_nationkey = n.n_nationkey AND (o_p1.o_orderdate >= DATE '1993-10-01' AND o_p1.o_orderdate < DATE '1994-01-01') AND l_p3.l_returnflag = 'R'"
   }, {
     "id" : "n-c_p1-o_p1-l_p1",
     "compliantQuery" : "SELECT c_p1.c_custkey, l_p1.l_extendedprice, l_p1.l_discount, c_p1.c_acctbal, n.n_name, c_p1.c_phone, c_p1.c_comment\r\nFROM public.c_p1,\r\npublic.o_p1,\r\npublic.l_p1,\r\npublic.n\r\nWHERE c_p1.c_custkey = o_p1.o_custkey AND l_p1.l_orderkey = o_p1.o_orderkey AND c_p1.c_nationkey = n.n_nationkey AND (o_p1.o_orderdate >= DATE '1993-10-01' AND o_p1.o_orderdate < DATE '1994-01-01') AND l_p1.l_returnflag = 'R'"
   }, {
-    "id" : "n-c_p2-o_p2-l_p3",
-    "compliantQuery" : "SELECT c_p2.c_custkey, l_p3.l_extendedprice, l_p3.l_discount, c_p2.c_acctbal, n.n_name, c_p2.c_phone, c_p2.c_comment\r\nFROM public.c_p2,\r\npublic.o_p2,\r\npublic.l_p3,\r\npublic.n\r\nWHERE c_p2.c_custkey = o_p2.o_custkey AND (l_p3.l_orderkey = o_p2.o_orderkey AND c_p2.c_nationkey = n.n_nationkey) AND (o_p2.o_orderdate >= generalize_date(DATE '1993-10-01', 'MONTH') AND (o_p2.o_orderdate < generalize_date(DATE '1994-01-01', 'MONTH') AND l_p3.l_returnflag = 'R'))"
-  }, {
     "id" : "n-c_p2-o_p2-l_p2",
     "compliantQuery" : "SELECT c_p2.c_custkey, l_p2.l_extendedprice, l_p2.l_discount, c_p2.c_acctbal, n.n_name, c_p2.c_phone, c_p2.c_comment\r\nFROM public.c_p2,\r\npublic.o_p2,\r\npublic.l_p2,\r\npublic.n\r\nWHERE c_p2.c_custkey = o_p2.o_custkey AND (l_p2.l_orderkey = o_p2.o_orderkey AND c_p2.c_nationkey = n.n_nationkey) AND (o_p2.o_orderdate >= generalize_date(DATE '1993-10-01', 'MONTH') AND (o_p2.o_orderdate < generalize_date(DATE '1994-01-01', 'MONTH') AND l_p2.l_returnflag = 'R'))"
+  }, {
+    "id" : "n-c_p2-o_p2-l_p3",
+    "compliantQuery" : "SELECT c_p2.c_custkey, l_p3.l_extendedprice, l_p3.l_discount, c_p2.c_acctbal, n.n_name, c_p2.c_phone, c_p2.c_comment\r\nFROM public.c_p2,\r\npublic.o_p2,\r\npublic.l_p3,\r\npublic.n\r\nWHERE c_p2.c_custkey = o_p2.o_custkey AND (l_p3.l_orderkey = o_p2.o_orderkey AND c_p2.c_nationkey = n.n_nationkey) AND (o_p2.o_orderdate >= generalize_date(DATE '1993-10-01', 'MONTH') AND (o_p2.o_orderdate < generalize_date(DATE '1994-01-01', 'MONTH') AND l_p3.l_returnflag = 'R'))"
   }, {
     "id" : "n-c_p2-o_p2-l_p1",
     "compliantQuery" : "SELECT c_p2.c_custkey, l_p1.l_extendedprice, l_p1.l_discount, c_p2.c_acctbal, n.n_name, c_p2.c_phone, c_p2.c_comment\r\nFROM public.c_p2,\r\npublic.o_p2,\r\npublic.l_p1,\r\npublic.n\r\nWHERE c_p2.c_custkey = o_p2.o_custkey AND (l_p1.l_orderkey = o_p2.o_orderkey AND c_p2.c_nationkey = n.n_nationkey) AND (o_p2.o_orderdate >= generalize_date(DATE '1993-10-01', 'MONTH') AND (o_p2.o_orderdate < generalize_date(DATE '1994-01-01', 'MONTH') AND l_p1.l_returnflag = 'R'))"
   }, {
-    "id" : "n-c_p1-o_p2-l_p3",
-    "compliantQuery" : "SELECT c_p1.c_custkey, l_p3.l_extendedprice, l_p3.l_discount, c_p1.c_acctbal, n.n_name, c_p1.c_phone, c_p1.c_comment\r\nFROM public.c_p1,\r\npublic.o_p2,\r\npublic.l_p3,\r\npublic.n\r\nWHERE c_p1.c_custkey = o_p2.o_custkey AND (l_p3.l_orderkey = o_p2.o_orderkey AND c_p1.c_nationkey = n.n_nationkey) AND (o_p2.o_orderdate >= generalize_date(DATE '1993-10-01', 'MONTH') AND (o_p2.o_orderdate < generalize_date(DATE '1994-01-01', 'MONTH') AND l_p3.l_returnflag = 'R'))"
-  }, {
     "id" : "n-c_p1-o_p2-l_p2",
     "compliantQuery" : "SELECT c_p1.c_custkey, l_p2.l_extendedprice, l_p2.l_discount, c_p1.c_acctbal, n.n_name, c_p1.c_phone, c_p1.c_comment\r\nFROM public.c_p1,\r\npublic.o_p2,\r\npublic.l_p2,\r\npublic.n\r\nWHERE c_p1.c_custkey = o_p2.o_custkey AND (l_p2.l_orderkey = o_p2.o_orderkey AND c_p1.c_nationkey = n.n_nationkey) AND (o_p2.o_orderdate >= generalize_date(DATE '1993-10-01', 'MONTH') AND (o_p2.o_orderdate < generalize_date(DATE '1994-01-01', 'MONTH') AND l_p2.l_returnflag = 'R'))"
+  }, {
+    "id" : "n-c_p1-o_p2-l_p3",
+    "compliantQuery" : "SELECT c_p1.c_custkey, l_p3.l_extendedprice, l_p3.l_discount, c_p1.c_acctbal, n.n_name, c_p1.c_phone, c_p1.c_comment\r\nFROM public.c_p1,\r\npublic.o_p2,\r\npublic.l_p3,\r\npublic.n\r\nWHERE c_p1.c_custkey = o_p2.o_custkey AND (l_p3.l_orderkey = o_p2.o_orderkey AND c_p1.c_nationkey = n.n_nationkey) AND (o_p2.o_orderdate >= generalize_date(DATE '1993-10-01', 'MONTH') AND (o_p2.o_orderdate < generalize_date(DATE '1994-01-01', 'MONTH') AND l_p3.l_returnflag = 'R'))"
   }, {
     "id" : "n-c_p1-o_p2-l_p1",
     "compliantQuery" : "SELECT c_p1.c_custkey, l_p1.l_extendedprice, l_p1.l_discount, c_p1.c_acctbal, n.n_name, c_p1.c_phone, c_p1.c_comment\r\nFROM public.c_p1,\r\npublic.o_p2,\r\npublic.l_p1,\r\npublic.n\r\nWHERE c_p1.c_custkey = o_p2.o_custkey AND (l_p1.l_orderkey = o_p2.o_orderkey AND c_p1.c_nationkey = n.n_nationkey) AND (o_p2.o_orderdate >= generalize_date(DATE '1993-10-01', 'MONTH') AND (o_p2.o_orderdate < generalize_date(DATE '1994-01-01', 'MONTH') AND l_p1.l_returnflag = 'R'))"
