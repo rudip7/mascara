@@ -28,7 +28,7 @@ public class QualityEstimator {
 
 //        String query = MascaraMaster.planToSql(originalPlan);
         String cardinalityQuery = convertToCardinalityQuery(originalPlan);
-        System.out.println(cardinalityQuery);
+        // System.out.println(cardinalityQuery);
         originalCardinality = dbConnector.estimateCardinality(cardinalityQuery);
 
     }

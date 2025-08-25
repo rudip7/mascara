@@ -1,0 +1,10 @@
+{
+  "query" : "select o_orderdate,o_shippriority\nfrom orders",
+  "compliantQueries" : [ {
+    "id" : "o_p2",
+    "compliantQuery" : "SELECT o_orderdate, o_shippriority\r\nFROM public.o_p2"
+  }, {
+    "id" : "o_p1",
+    "compliantQuery" : "SELECT o_orderdate, o_shippriority\r\nFROM public.o_p1"
+  } ]
+}

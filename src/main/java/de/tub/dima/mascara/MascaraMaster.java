@@ -56,18 +56,18 @@ public class MascaraMaster {
     }
 
     public String optimalCompliantQuery(String sql, String outputDir, String reportDir, String detailedReport) throws Exception {
-        System.out.println("[Requested Query]:\n");
-        System.out.println(sql);
+        // System.out.println("[Requested Query]:\n");
+        // System.out.println(sql);
 
         RelRoot logicalPlan = getLogicalPlan(sql);
-        DebuggingTools.printPlan("[Logical plan]:", logicalPlan.rel);
+        // DebuggingTools.printPlan("[Logical plan]:", logicalPlan.rel);
         List<CompliantPlan> compliantPlans = modify(logicalPlan);
         QualityEstimator qualityEstimator = new QualityEstimator(logicalPlan.rel, dbConnector);
 //        List<Pair<String, Double>> utilityScore = new ArrayList<>(compliantPlans.size());
         for (int i = 0; i < compliantPlans.size(); i++) {
             CompliantPlan compliantPlan = compliantPlans.get(i);
             double score = qualityEstimator.estimate(compliantPlan, compliantPlan.queryAttributes);
-            System.out.println(compliantPlan.getId()+": Total Utility Score: " + score+"\n");
+            // System.out.println(compliantPlan.getId()+": Total Utility Score: " + score+"\n");
 
         }
         compliantPlans.sort((o1, o2) -> o1.getUtilityScore().compareTo(o2.getUtilityScore()));
@@ -112,7 +112,7 @@ public class MascaraMaster {
 
 
         String compliantQuery = planToSql(compliantPlans.get(0).logicalPlan.rel);
-        System.out.println("Optimal Compliant Query: " + compliantQuery);
+        //System.out.println("Optimal Compliant Query: " + compliantQuery);
         return compliantQuery;
     }
 
