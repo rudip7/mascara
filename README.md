@@ -15,7 +15,7 @@ This repository provides a prototype of Mascara, a middleware for specifying and
 Mascara, in its current state, is prepared to work with PostgreSQL. Technically, it should work with any database with a JDBC connection, but this has not been tested yet.
 You must initialize a TPC-H dataset in your PostgreSQL database to run the examples and experiments in our SIGMOD paper.
 
-An image of the data used for the experiments in our SIGMOD paper is available at [TU Berlin's Cloud](https://tubcloud.tu-berlin.de/s/GtJiwtWDCjgdLzt). The image is a dump of a PostgreSQL database. 
+An image of the data used for the experiments in our SIGMOD paper is available at [TU Berlin's Cloud](https://tubcloud.tu-berlin.de/s/qg7dq62tcHYRPEL). The image is a dump of a PostgreSQL database. 
 After downloading the image, you can restore it using the following command:
 
 ```bash
